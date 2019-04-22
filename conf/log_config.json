@@ -1,0 +1,58 @@
+{
+   "version": 1,
+    "disable_existing_loggers": true,
+    "formatters": {
+      "brief": {
+        "class": "logging.Formatter",
+        "datefmt": "%I:%M:%S",
+        "format": "%(levelname)-8s; %(name)-15s; %(message)s"
+      },
+      "single-line": {
+        "class": "logging.Formatter",
+        "datefmt": "%I:%M:%S",
+        "format": "%(levelname)-8s %(asctime)s %(name)-8s %(module)s:%(funcName)s:%(lineno)d: %(message)s"
+      },
+      "multi-process": {
+        "class": "logging.Formatter",
+        "datefmt": "%I:%M:%S",
+        "format": "%(levelname)-8s; [%(process)d]; %(name)-15s; %(module)s:%(funcName)s;%(lineno)d: %(message)s"
+      },
+      "multi-thread": {
+        "class": "logging.Formatter",
+        "datefmt": "%I:%M:%S",
+        "format": "%(levelname)-8s; %(threadName)s; %(name)-15s; %(module)s:%(funcName)s;%(lineno)d: %(message)s"
+      },
+      "verbose": {
+        "class": "logging.Formatter",
+        "datefmt": "%I:%M:%S",
+        "format": "%(levelname)-8s; [%(process)d]; %(threadName)s; %(name)-15s; %(module)s:%(funcName)s;%(lineno)d: %(message)s"
+      },
+      "multi-line": {
+        "class": "logging.Formatter",
+        "format": "Level: %(levelname)s\nTime: %(asctime)s\nProcess: %(process)d\nThread: %(threadName)s\nLogger: %(name)s\nPath: %(module)s:%(lineno)d\nFunction :%(funcName)s\nMessage: %(message)s\n"
+      }
+    },
+    "handlers": {
+      "console":{
+        "level": "DEBUG",
+        "class": "logging.StreamHandler",
+        "formatter": "single-line",
+        "stream" : "ext://sys.stdout"
+      },
+      "file_handler": {
+        "level": "DEBUG",
+        "class": "logging.handlers.RotatingFileHandler",
+        "formatter": "single-line",
+        "filename": "/tmp",
+        "mode": "a",
+        "encoding": "utf-8",
+        "maxBytes": 104857600,
+        "backupCount": 10
+      }
+    },
+    "loggers": { },
+    "root": {
+      "handlers": ["console", "file_handler"],
+      "level": "DEBUG"
+    }
+}

@@ -1,0 +1,217 @@
+[
+  {
+    "dataParameters": {
+      "predictionLabels": "y_pred",
+      "truthLabels": "y_true"
+    },
+    "defaultArgs": {},
+    "method": "matthews_corrcoef",
+    "objectInfo": {
+      "kind": "Metric"
+    },
+    "package": "sklearn.metrics"
+  },
+  {
+    "dataParameters": {
+      "predictionLabels": "y_pred",
+      "truthLabels": "y_true"
+    },
+    "defaultArgs": {},
+    "method": "confusion_matrix",
+    "objectInfo": {
+      "kind": "Metric"
+    },
+    "package": "sklearn.metrics"
+  },
+  {
+    "dataParameters": {
+      "predictionLabels": "y_pred",
+      "truthLabels": "y_true"
+    },
+    "defaultArgs": {},
+    "method": "accuracy_score",
+    "objectInfo": {
+      "kind": "Metric"
+    },
+    "package": "sklearn.metrics"
+  },
+  {
+    "dataParameters": {
+      "predictionLabels": "y_pred",
+      "truthLabels": "y_true"
+    },
+    "defaultArgs": {},
+    "method": "hamming_loss",
+    "objectInfo": {
+      "kind": "Metric"
+    },
+    "package": "sklearn.metrics"
+  },
+  {
+    "dataParameters": {
+      "predictionLabels": "y_pred",
+      "truthLabels": "y_true"
+    },
+    "defaultArgs": {
+      "average": null
+    },
+    "method": "f1_score",
+    "objectInfo": {
+      "kind": "Metric"
+    },
+    "package": "sklearn.metrics"
+  },
+  {
+    "dataParameters": {
+      "predictionScores": "y_pred",
+      "truthLabels": "y_true"
+    },
+    "defaultArgs": {},
+    "method": "log_loss",
+    "objectInfo": {
+      "kind": "Metric"
+    },
+    "package": "sklearn.metrics"
+  },
+  {
+    "dataParameters": {
+      "predictionLabels": "y_pred",
+      "truthLabels": "y_true"
+    },
+    "defaultArgs": {
+      "average": null,
+      "beta": 0.5
+    },
+    "method": "fbeta_score",
+    "objectInfo": {
+      "kind": "Metric"
+    },
+    "package": "sklearn.metrics"
+  },
+  {
+    "dataParameters": {
+      "predictionLabels": "y_pred",
+      "truthLabels": "y_true"
+    },
+    "defaultArgs": {
+      "average": null
+    },
+    "method": "recall_score",
+    "objectInfo": {
+      "kind": "Metric"
+    },
+    "package": "sklearn.metrics"
+  },
+  {
+    "dataParameters": {
+      "predictionLabels": "y_pred",
+      "truthLabels": "y_true"
+    },
+    "defaultArgs": {
+      "average": null
+    },
+    "method": "precision_score",
+    "objectInfo": {
+      "kind": "Metric"
+    },
+    "package": "sklearn.metrics"
+  },
+  {
+    "dataParameters": {
+      "predictionScores": "y_prob",
+      "truthLabels": "y_true"
+    },
+    "defaultArgs": {},
+    "method": "brier_score_loss",
+    "objectInfo": {
+      "kind": "Metric"
+    },
+    "package": "sklearn.metrics"
+  },
+  {
+    "dataParameters": {
+      "predictionScores": "y_score",
+      "truthLabels": "y_true"
+    },
+    "defaultArgs": {},
+    "method": "roc_curve",
+    "objectInfo": {
+      "kind": "Metric"
+    },
+    "package": "sklearn.metrics"
+  },
+  {
+    "dataParameters": {
+      "predictionScores": "y_score",
+      "truthLabels": "y_true"
+    },
+    "defaultArgs": {
+      "average": null
+    },
+    "method": "roc_auc_score",
+    "objectInfo": {
+      "kind": "Metric"
+    },
+    "package": "sklearn.metrics"
+  },
+  {
+    "dataParameters": {
+      "predictionLabels": "y_pred",
+      "truthLabels": "y_true"
+    },
+    "defaultArgs": {},
+    "method": "explained_variance_score",
+    "objectInfo": {
+      "kind": "Metric"
+    },
+    "package": "sklearn.metrics"
+  },
+  {
+    "dataParameters": {
+      "predictionLabels": "y_pred",
+      "truthLabels": "y_true"
+    },
+    "defaultArgs": {},
+    "method": "mean_absolute_error",
+    "objectInfo": {
+      "kind": "Metric"
+    },
+    "package": "sklearn.metrics"
+  },
+  {
+    "dataParameters": {
+      "predictionLabels": "y_pred",
+      "truthLabels": "y_true"
+    },
+    "defaultArgs": {},
+    "method": "mean_squared_error",
+    "objectInfo": {
+      "kind": "Metric"
+    },
+    "package": "sklearn.metrics"
+  },
+  {
+    "dataParameters": {
+      "predictionLabels": "y_pred",
+      "truthLabels": "y_true"
+    },
+    "defaultArgs": {},
+    "method": "mean_squared_log_error",
+    "objectInfo": {
+      "kind": "Metric"
+    },
+    "package": "sklearn.metrics"
+  },
+  {
+    "dataParameters": {
+      "predictionLabels": "y_pred",
+      "truthLabels": "y_true"
+    },
+    "defaultArgs": {},
+    "method": "r2_score",
+    "objectInfo": {
+      "kind": "Metric"
+    },
+    "package": "sklearn.metrics"
+  }
+]

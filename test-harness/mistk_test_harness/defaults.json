@@ -1,0 +1,38 @@
+{
+  "BinaryClassification": [ "sklearn.metrics.matthews_corrcoef",
+                            "sklearn.metrics.confusion_matrix",
+                            "sklearn.metrics.accuracy_score",
+                            "sklearn.metrics.hamming_loss",
+                            "sklearn.metrics.f1_score",
+                            "sklearn.metrics.log_loss",
+                            "sklearn.metrics.fbeta_score",
+                            "sklearn.metrics.recall_score",
+                            "sklearn.metrics.precision_score",
+                            "sklearn.metrics.brier_score_loss",
+                            "sklearn.metrics.roc_curve",
+                            "sklearn.metrics.roc_auc_score" ],
+                            
+  "MulticlassClassification": [ "sklearn.metrics.accuracy_score",
+                                "sklearn.metrics.hamming_loss",
+                                "sklearn.metrics.f1_score",
+                                "sklearn.metrics.log_loss",
+                                "sklearn.metrics.fbeta_score",
+                                "sklearn.metrics.recall_score",
+                                "sklearn.metrics.precision_score" ],
+                                
+                            
+  "MultilabelClassification": [ "sklearn.metrics.accuracy_score",
+                                "sklearn.metrics.hamming_loss",
+                                "sklearn.metrics.f1_score",
+                                "sklearn.metrics.log_loss",
+                                "sklearn.metrics.fbeta_score",
+                                "sklearn.metrics.recall_score",
+                                "sklearn.metrics.precision_score" ],
+
+                            
+  "Regression": [ "sklearn.metrics.explained_variance_score",
+                  "sklearn.metrics.mean_absolute_error",
+                  "sklearn.metrics.mean_squared_error",
+                  "sklearn.metrics.mean_squared_log_error",
+                  "sklearn.metrics.r2_score" ]                               
+}

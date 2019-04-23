@@ -1,6 +1,8 @@
 NAME:=mistk
 
-include ../utils/common.mk
+include common.mk
+
+API_VERSION:="0.3.5"
 
 .PHONY: help
 
@@ -14,12 +16,9 @@ clean: ## Remove all build artifacts
 	$(PYTHON) setup.py clean
 	rm -rf gen $(NAME)/server test-harness/mistk_test_harness/client docs dist *.egg-info test-harness/*.egg-info sphinx_docs
 
-../smlcore/sml-api.yaml:
-	cd ../smlcore && $(MAKE) sml-api.yaml
-
 gen:: gen/$(NAME)_server
 
-gen/$(NAME)_server: $(API) ../smlcore/sml-api.yaml
+gen/$(NAME)_server: $(API) 
 	rm -rf gen/$(NAME)_server
 	$(CODEGEN) generate -l python-flask -o $(OUTPUT_BASE_DIR)/gen/$(NAME)_server -i $(YAML_FILE) -D packageName=$(NAME).server	
 
@@ -46,7 +45,7 @@ $(NAME): $(NAME)/server $(NAME)/client
 sphinx_docs:
 	rm -rf sphinx_docs
 	mkdir -p sphinx_docs
-	sphinx-apidoc -o sphinx_docs/ mistk -F -e -H "MISTK Model Developer API" -V "0.3.1" -R "0.3.1" -A "Asif Dipon, Andrew Shilliday, Jason Isabel, Tom Damiano"
+	sphinx-apidoc -o sphinx_docs/ mistk -F -e -H "MISTK Model Developer API" -V $(API_VERSION) -R $(API_VERSION) -A "Asif Dipon, Andrew Shilliday, Jason Isabel, Tom Damiano"
 	pushd sphinx_docs && make html && popd
 
 docs: $(API) ## Generate documentation for the API
@@ -61,6 +60,5 @@ dist: $(NAME) docs  $(shell find $(NAME)) test-harness $(shell find . -maxdepth 
 install: dist
 	$(PYTHON) -m pip install $(shell find dist -type f) --user
 
-upload: dist
-	twine upload --skip-existing -u $(PYPI_USER) -p $(PYPI_PASSWORD) --repository-url $(PYPI_LOCATION) $(shell find dist -type f)
+
 

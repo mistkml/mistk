@@ -197,7 +197,7 @@ def _deserialize_dict(data, boxed_type):
     
 def convert_client_object(obj, cls=None):
     """
-    Converts an client object into the SML Data Model object
+    Converts an client object into the Data Model object
     
     :param obj: The object to convert
     :param cls: Defaults to None

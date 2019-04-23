@@ -472,7 +472,7 @@ definitions:
           \ automatically.\n"
       name:
         type: "string"
-        description: "The unique name of the object. Names of SML resources should\
+        description: "The unique name of the object. Names of resources should\
           \ be up to maximum length of 253 characters and consist of lower case alphanumeric\
           \ characters, -, and .\n"
       description:

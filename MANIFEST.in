@@ -1,1 +1,2 @@
 include mistk/server/**/*.yaml
+include conf/*

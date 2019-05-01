@@ -1,9 +1,10 @@
 # this model uses a generic python v3 base image
 FROM python:3.6
 
-# these lines pull the MISTK base infrastructure into this model
-RUN pip install mistk --no-cache-dir --extra-index-url http://pypiserver.sml.svc.sml.atl.lmco.com:8080 --trusted-host pypi.python.org --trusted-host pypiserver.sml.svc.sml.atl.lmco.com
+# Install the MISTK Python library from github
+RUN pip install git+https://github.com/mistkml/mistk#egg=mistk --trusted-host pypi.python.org --trusted-host pypi.org --trusted-host files.pythonhosted.org
 
+# Install necessary third part libraries for logistic regression model
 RUN pip install numpy pandas scikit-learn scipy --trusted-host pypi.python.org
 
 # install the python code for our Logistic Regression model

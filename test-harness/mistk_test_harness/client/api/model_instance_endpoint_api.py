@@ -989,7 +989,7 @@ class ModelInstanceEndpointApi(object):
         >>> result = thread.get()
 
         :param async bool
-        :param  data_path: A path pointing to the directory where the predictions are to be saved.  (required)
+        :param str data_path: A path pointing to the directory where the predictions are to be saved.  (required)
         :return: None
                  If the method is called asynchronously,
                  returns the request thread.
@@ -1011,7 +1011,7 @@ class ModelInstanceEndpointApi(object):
         >>> result = thread.get()
 
         :param async bool
-        :param  data_path: A path pointing to the directory where the predictions are to be saved.  (required)
+        :param str data_path: A path pointing to the directory where the predictions are to be saved.  (required)
         :return: None
                  If the method is called asynchronously,
                  returns the request thread.
@@ -1042,6 +1042,8 @@ class ModelInstanceEndpointApi(object):
         path_params = {}
 
         query_params = []
+        if 'data_path' in params:
+            query_params.append(('dataPath', params['data_path']))  # noqa: E501
 
         header_params = {}
 
@@ -1049,8 +1051,6 @@ class ModelInstanceEndpointApi(object):
         local_var_files = {}
 
         body_params = None
-        if 'data_path' in params:
-            body_params = params['data_path']
         # HTTP header `Accept`
         header_params['Accept'] = self.api_client.select_header_accept(
             ['application/json'])  # noqa: E501

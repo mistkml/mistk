@@ -213,10 +213,11 @@ paths:
         \ path\n"
       operationId: "save_predictions"
       parameters:
-      - in: "body"
+      - in: "query"
         name: "dataPath"
         description: "A path pointing to the directory where the predictions are to\
           \ be saved.\n"
+        type: "string"
         required: true
       responses:
         200:

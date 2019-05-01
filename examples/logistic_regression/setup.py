@@ -15,7 +15,19 @@
 #
 ##############################################################################
 
-"""
-Wrapper python package for obtaining all MISTK Data Model classes. 
-"""
-from mistk.server.models import *  #pylint: disable=wildcard-import
+from setuptools import setup, find_packages
+
+REQUIRES=[
+    'setuptools >= 21.0.0',
+    'pandas >= 0.20.3',
+    'scikit-learn >= 0.19.1',
+    'numpy >= 1.13.3',
+    'scipy >= 1.0.0',
+    'mistk'
+]
+
+setup(
+    install_requires=REQUIRES,
+    name='scikit-basicmodels',
+    packages=find_packages()
+)

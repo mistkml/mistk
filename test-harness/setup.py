@@ -32,5 +32,7 @@ setuptools.setup(
     packages=setuptools.find_packages(),
     package_data={'mistk_test_harness': ['*.json']},
     install_requires=REQUIRES,
-    use_scm_version = {"root": "../..", "relative_to": __file__},
-    setup_requires=['setuptools_scm'])
+    version='0.3.5'
+    #use_scm_version = {"root": "..", "relative_to": __file__},
+    #setup_requires=['setuptools_scm']
+)

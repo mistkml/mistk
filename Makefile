@@ -14,7 +14,7 @@ all: $(NAME) docs dist
 
 clean: ## Remove all build artifacts
 	$(PYTHON) setup.py clean
-	rm -rf gen $(NAME)/server test-harness/mistk_test_harness/client docs dist *.egg-info test-harness/*.egg-info sphinx_docs
+	rm -rf gen $(NAME)/server test-harness/mistk_test_harness/client docs dist *.egg-info test-harness/*.egg-info sphinx_docs build test-harness/build
 
 gen:: gen/$(NAME)_server
 
@@ -41,6 +41,7 @@ $(NAME)/client: gen/$(NAME)_client
 	cp -rv gen/$(NAME)_client/mistk_test_harness/client/* test-harness/mistk_test_harness/client
 
 $(NAME): $(NAME)/server $(NAME)/client
+	rm -rf gen
 
 sphinx_docs:
 	rm -rf sphinx_docs

@@ -19,6 +19,7 @@ import six
 from mistk_test_harness.client.models.dataset import Dataset  # noqa: F401,E501
 from mistk_test_harness.client.models.dataset_statistics import DatasetStatistics  # noqa: F401,E501
 from mistk_test_harness.client.models.object_info import ObjectInfo  # noqa: F401,E501
+from mistk_test_harness.client.models.object_reference import ObjectReference  # noqa: F401,E501
 
 
 class MistkDataset(object):
@@ -41,6 +42,7 @@ class MistkDataset(object):
         'modality': 'str',
         'format': 'str',
         'statistics': 'DatasetStatistics',
+        'default_ground_truth_set_reference': 'ObjectReference',
         'data_path': 'str'
     }
 
@@ -51,10 +53,11 @@ class MistkDataset(object):
         'modality': 'modality',
         'format': 'format',
         'statistics': 'statistics',
+        'default_ground_truth_set_reference': 'defaultGroundTruthSetReference',
         'data_path': 'dataPath'
     }
 
-    def __init__(self, object_info=None, datastash_id=None, datastash_sub_dir=None, modality=None, format=None, statistics=None, data_path=None):  # noqa: E501
+    def __init__(self, object_info=None, datastash_id=None, datastash_sub_dir=None, modality=None, format=None, statistics=None, default_ground_truth_set_reference=None, data_path=None):  # noqa: E501
         """MistkDataset - a model defined in Swagger"""  # noqa: E501
 
         self._object_info = None
@@ -63,6 +66,7 @@ class MistkDataset(object):
         self._modality = None
         self._format = None
         self._statistics = None
+        self._default_ground_truth_set_reference = None
         self._data_path = None
         self.discriminator = None
 
@@ -77,6 +81,8 @@ class MistkDataset(object):
             self.format = format
         if statistics is not None:
             self.statistics = statistics
+        if default_ground_truth_set_reference is not None:
+            self.default_ground_truth_set_reference = default_ground_truth_set_reference
         if data_path is not None:
             self.data_path = data_path
 
@@ -221,6 +227,27 @@ class MistkDataset(object):
         """
 
         self._statistics = statistics
+
+    @property
+    def default_ground_truth_set_reference(self):
+        """Gets the default_ground_truth_set_reference of this MistkDataset.  # noqa: E501
+
+
+        :return: The default_ground_truth_set_reference of this MistkDataset.  # noqa: E501
+        :rtype: ObjectReference
+        """
+        return self._default_ground_truth_set_reference
+
+    @default_ground_truth_set_reference.setter
+    def default_ground_truth_set_reference(self, default_ground_truth_set_reference):
+        """Sets the default_ground_truth_set_reference of this MistkDataset.
+
+
+        :param default_ground_truth_set_reference: The default_ground_truth_set_reference of this MistkDataset.  # noqa: E501
+        :type: ObjectReference
+        """
+
+        self._default_ground_truth_set_reference = default_ground_truth_set_reference
 
     @property
     def data_path(self):

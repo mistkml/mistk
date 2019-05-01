@@ -336,7 +336,7 @@ class ModelInstanceEndpointApi(object):
         >>> result = thread.get()
 
         :param async bool
-        :param object datasets: A dictionary mapping objectives to Object References of Dataset objects.  Dictionary keys must be one of the following {train, test}  (required)
+        :param object datasets: A dictionary mapping objectives to MistkDataset objects.  Dictionary keys must be one of the following {train, test}  (required)
         :return: None
                  If the method is called asynchronously,
                  returns the request thread.
@@ -358,7 +358,7 @@ class ModelInstanceEndpointApi(object):
         >>> result = thread.get()
 
         :param async bool
-        :param object datasets: A dictionary mapping objectives to Object References of Dataset objects.  Dictionary keys must be one of the following {train, test}  (required)
+        :param object datasets: A dictionary mapping objectives to MistkDataset objects.  Dictionary keys must be one of the following {train, test}  (required)
         :return: None
                  If the method is called asynchronously,
                  returns the request thread.
@@ -979,45 +979,45 @@ class ModelInstanceEndpointApi(object):
             _request_timeout=params.get('_request_timeout'),
             collection_formats=collection_formats)
 
-    def save_predictions(self, dataset, **kwargs):  # noqa: E501
+    def save_predictions(self, data_path, **kwargs):  # noqa: E501
         """Save the model&#39;s predictions  # noqa: E501
 
         Instructs the container to save the predictions to the specified path   # noqa: E501
         This method makes a synchronous HTTP request by default. To make an
         asynchronous HTTP request, please pass async=True
-        >>> thread = api.save_predictions(dataset, async=True)
+        >>> thread = api.save_predictions(data_path, async=True)
         >>> result = thread.get()
 
         :param async bool
-        :param MistkDataset dataset: A dataset that contains a path pointing to the directory where the predictions are to be saved.  (required)
+        :param  data_path: A path pointing to the directory where the predictions are to be saved.  (required)
         :return: None
                  If the method is called asynchronously,
                  returns the request thread.
         """
         kwargs['_return_http_data_only'] = True
         if kwargs.get('async'):
-            return self.save_predictions_with_http_info(dataset, **kwargs)  # noqa: E501
+            return self.save_predictions_with_http_info(data_path, **kwargs)  # noqa: E501
         else:
-            (data) = self.save_predictions_with_http_info(dataset, **kwargs)  # noqa: E501
+            (data) = self.save_predictions_with_http_info(data_path, **kwargs)  # noqa: E501
             return data
 
-    def save_predictions_with_http_info(self, dataset, **kwargs):  # noqa: E501
+    def save_predictions_with_http_info(self, data_path, **kwargs):  # noqa: E501
         """Save the model&#39;s predictions  # noqa: E501
 
         Instructs the container to save the predictions to the specified path   # noqa: E501
         This method makes a synchronous HTTP request by default. To make an
         asynchronous HTTP request, please pass async=True
-        >>> thread = api.save_predictions_with_http_info(dataset, async=True)
+        >>> thread = api.save_predictions_with_http_info(data_path, async=True)
         >>> result = thread.get()
 
         :param async bool
-        :param MistkDataset dataset: A dataset that contains a path pointing to the directory where the predictions are to be saved.  (required)
+        :param  data_path: A path pointing to the directory where the predictions are to be saved.  (required)
         :return: None
                  If the method is called asynchronously,
                  returns the request thread.
         """
 
-        all_params = ['dataset']  # noqa: E501
+        all_params = ['data_path']  # noqa: E501
         all_params.append('async')
         all_params.append('_return_http_data_only')
         all_params.append('_preload_content')
@@ -1032,10 +1032,10 @@ class ModelInstanceEndpointApi(object):
                 )
             params[key] = val
         del params['kwargs']
-        # verify the required parameter 'dataset' is set
-        if ('dataset' not in params or
-                params['dataset'] is None):
-            raise ValueError("Missing the required parameter `dataset` when calling `save_predictions`")  # noqa: E501
+        # verify the required parameter 'data_path' is set
+        if ('data_path' not in params or
+                params['data_path'] is None):
+            raise ValueError("Missing the required parameter `data_path` when calling `save_predictions`")  # noqa: E501
 
         collection_formats = {}
 
@@ -1049,8 +1049,8 @@ class ModelInstanceEndpointApi(object):
         local_var_files = {}
 
         body_params = None
-        if 'dataset' in params:
-            body_params = params['dataset']
+        if 'data_path' in params:
+            body_params = params['data_path']
         # HTTP header `Accept`
         header_params['Accept'] = self.api_client.select_header_accept(
             ['application/json'])  # noqa: E501

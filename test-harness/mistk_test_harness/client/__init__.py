@@ -29,6 +29,7 @@ from mistk_test_harness.client.models.metric_data_parameters import MetricDataPa
 from mistk_test_harness.client.models.model_instance_init_params import ModelInstanceInitParams
 from mistk_test_harness.client.models.model_instance_status import ModelInstanceStatus
 from mistk_test_harness.client.models.object_info import ObjectInfo
+from mistk_test_harness.client.models.object_reference import ObjectReference
 from mistk_test_harness.client.models.service_error import ServiceError
 from mistk_test_harness.client.models.watch_event import WatchEvent
 from mistk_test_harness.client.models.mistk_dataset import MistkDataset

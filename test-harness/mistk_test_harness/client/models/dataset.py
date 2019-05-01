@@ -18,6 +18,7 @@ import six
 
 from mistk_test_harness.client.models.dataset_statistics import DatasetStatistics  # noqa: F401,E501
 from mistk_test_harness.client.models.object_info import ObjectInfo  # noqa: F401,E501
+from mistk_test_harness.client.models.object_reference import ObjectReference  # noqa: F401,E501
 
 
 class Dataset(object):
@@ -39,7 +40,8 @@ class Dataset(object):
         'datastash_sub_dir': 'str',
         'modality': 'str',
         'format': 'str',
-        'statistics': 'DatasetStatistics'
+        'statistics': 'DatasetStatistics',
+        'default_ground_truth_set_reference': 'ObjectReference'
     }
 
     attribute_map = {
@@ -48,10 +50,11 @@ class Dataset(object):
         'datastash_sub_dir': 'datastashSubDir',
         'modality': 'modality',
         'format': 'format',
-        'statistics': 'statistics'
+        'statistics': 'statistics',
+        'default_ground_truth_set_reference': 'defaultGroundTruthSetReference'
     }
 
-    def __init__(self, object_info=None, datastash_id=None, datastash_sub_dir=None, modality=None, format=None, statistics=None):  # noqa: E501
+    def __init__(self, object_info=None, datastash_id=None, datastash_sub_dir=None, modality=None, format=None, statistics=None, default_ground_truth_set_reference=None):  # noqa: E501
         """Dataset - a model defined in Swagger"""  # noqa: E501
 
         self._object_info = None
@@ -60,6 +63,7 @@ class Dataset(object):
         self._modality = None
         self._format = None
         self._statistics = None
+        self._default_ground_truth_set_reference = None
         self.discriminator = None
 
         self.object_info = object_info
@@ -73,6 +77,8 @@ class Dataset(object):
             self.format = format
         if statistics is not None:
             self.statistics = statistics
+        if default_ground_truth_set_reference is not None:
+            self.default_ground_truth_set_reference = default_ground_truth_set_reference
 
     @property
     def object_info(self):
@@ -215,6 +221,27 @@ class Dataset(object):
         """
 
         self._statistics = statistics
+
+    @property
+    def default_ground_truth_set_reference(self):
+        """Gets the default_ground_truth_set_reference of this Dataset.  # noqa: E501
+
+
+        :return: The default_ground_truth_set_reference of this Dataset.  # noqa: E501
+        :rtype: ObjectReference
+        """
+        return self._default_ground_truth_set_reference
+
+    @default_ground_truth_set_reference.setter
+    def default_ground_truth_set_reference(self, default_ground_truth_set_reference):
+        """Sets the default_ground_truth_set_reference of this Dataset.
+
+
+        :param default_ground_truth_set_reference: The default_ground_truth_set_reference of this Dataset.  # noqa: E501
+        :type: ObjectReference
+        """
+
+        self._default_ground_truth_set_reference = default_ground_truth_set_reference
 
     def to_dict(self):
         """Returns the model properties as a dict"""

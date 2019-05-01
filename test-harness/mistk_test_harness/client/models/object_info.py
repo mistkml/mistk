@@ -147,7 +147,7 @@ class ObjectInfo(object):
     def name(self):
         """Gets the name of this ObjectInfo.  # noqa: E501
 
-        The unique name of the object.  # noqa: E501
+        The unique name of the object. Names of resources should be up to maximum length of 253 characters and consist of lower case alphanumeric characters, -, and .   # noqa: E501
 
         :return: The name of this ObjectInfo.  # noqa: E501
         :rtype: str
@@ -158,7 +158,7 @@ class ObjectInfo(object):
     def name(self, name):
         """Sets the name of this ObjectInfo.
 
-        The unique name of the object.  # noqa: E501
+        The unique name of the object. Names of resources should be up to maximum length of 253 characters and consist of lower case alphanumeric characters, -, and .   # noqa: E501
 
         :param name: The name of this ObjectInfo.  # noqa: E501
         :type: str

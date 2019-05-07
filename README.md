@@ -18,32 +18,17 @@ Docker
 
 ### Installing
 
-To build a python wheel file from source, run the following command:
+In order to develop algorithms to be integrated into MISTK, the
+MISTK Core Library (and its dependencies) must be available on
+PYTHONPATH.
 
-```
-make clean dist
-```
+You can download them down from the MISTK Github Repository [Releases Page](https://github.com/mistkml/mistk/releases)
+and install the wheel files `pip` with::
 
-To install that wheel file for your local user, run the following command:
+    pip install mistk-*-py3-none-any.whl
 
-```
-make install
-```
+Verify that mistk is now installed on PYTHON PATH by running::
 
-## Example models
+    >>> import mistk
 
-Logistic Regression 
-
-### Building the logistic regression model
-
-To build the logistic regression model, run the following command from within the 'examples/logistic_regression' directory:
-
-```
-make dist
-```
-
-To build the docker image for the logistic regression model, run the following command from within the 'examples/logistic_regression' directory:
-
-```
-make docker-image
-```
+See full [MISTK Documentation](https://mistkml.github.io/) for detailed installation instructions and to get started with the toolkit.

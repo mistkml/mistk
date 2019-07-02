@@ -74,7 +74,7 @@ class TestHarness(object):
             self._model_service.load_data(bindings)
             self.wait_for_state('load_data', 'ready')  
 
-    def model_train(self, model_path=None):
+    def model_train(self, model_save_path=None):
         """
         Call train and, if model_path is supplied, save_model on model.
         Output model status.
@@ -82,8 +82,8 @@ class TestHarness(object):
         self._model_service.train()
         self.wait_for_state('train', 'ready')
         
-        if model_path:
-            self._model_service.save_model(model_path)
+        if model_save_path:
+            self._model_service.save_model(model_save_path)
             self.wait_for_state('save_model', 'ready')
 
     def model_predict(self, predictions_path=None):

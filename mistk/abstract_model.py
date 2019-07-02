@@ -155,7 +155,7 @@ class AbstractModel (metaclass=ABCMeta):
         """
         pass
 
-    def build_model(self, modelPath):
+    def build_model(self, path=None):
         """
         Triggers the model to enter the building_model state.  A subsequent call to
         do_build_model with the given parameters will be made as a result.
@@ -163,7 +163,7 @@ class AbstractModel (metaclass=ABCMeta):
         This method should not be implemented or overwritten by subclasses.  It will be 
         created by the state machine.
         
-        :param modelPath: The path to the model file
+        :param path: The path to the model file
         """
         pass
     
@@ -217,7 +217,7 @@ class AbstractModel (metaclass=ABCMeta):
         """
         pass
     
-    def save_model(self):
+    def save_model(self, path):
         """
         Triggers the model to enter the unpausing state.  A subsequent call to
         do_unpause with the given parameters will be made as a result.

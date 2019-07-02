@@ -32,6 +32,7 @@ class ObjectReference(object):
     """
     swagger_types = {
         'kind': 'str',
+        'group': 'str',
         'id': 'str',
         'name': 'str',
         'instance': 'object'
@@ -39,15 +40,17 @@ class ObjectReference(object):
 
     attribute_map = {
         'kind': 'kind',
+        'group': 'group',
         'id': 'id',
         'name': 'name',
         'instance': 'instance'
     }
 
-    def __init__(self, kind=None, id=None, name=None, instance=None):  # noqa: E501
+    def __init__(self, kind=None, group=None, id=None, name=None, instance=None):  # noqa: E501
         """ObjectReference - a model defined in Swagger"""  # noqa: E501
 
         self._kind = None
+        self._group = None
         self._id = None
         self._name = None
         self._instance = None
@@ -55,6 +58,8 @@ class ObjectReference(object):
 
         if kind is not None:
             self.kind = kind
+        if group is not None:
+            self.group = group
         if id is not None:
             self.id = id
         if name is not None:
@@ -84,6 +89,29 @@ class ObjectReference(object):
         """
 
         self._kind = kind
+
+    @property
+    def group(self):
+        """Gets the group of this ObjectReference.  # noqa: E501
+
+        The group (namespace) of this object.   # noqa: E501
+
+        :return: The group of this ObjectReference.  # noqa: E501
+        :rtype: str
+        """
+        return self._group
+
+    @group.setter
+    def group(self, group):
+        """Sets the group of this ObjectReference.
+
+        The group (namespace) of this object.   # noqa: E501
+
+        :param group: The group of this ObjectReference.  # noqa: E501
+        :type: str
+        """
+
+        self._group = group
 
     @property
     def id(self):

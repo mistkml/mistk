@@ -232,6 +232,7 @@ class MistkDataset(object):
     def default_ground_truth_set_reference(self):
         """Gets the default_ground_truth_set_reference of this MistkDataset.  # noqa: E501
 
+        A reference to the default ground truth set that is associated with this dataset        # noqa: E501
 
         :return: The default_ground_truth_set_reference of this MistkDataset.  # noqa: E501
         :rtype: ObjectReference
@@ -242,6 +243,7 @@ class MistkDataset(object):
     def default_ground_truth_set_reference(self, default_ground_truth_set_reference):
         """Sets the default_ground_truth_set_reference of this MistkDataset.
 
+        A reference to the default ground truth set that is associated with this dataset        # noqa: E501
 
         :param default_ground_truth_set_reference: The default_ground_truth_set_reference of this MistkDataset.  # noqa: E501
         :type: ObjectReference

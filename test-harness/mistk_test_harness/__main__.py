@@ -31,15 +31,15 @@ parser = argparse.ArgumentParser(description='Test harness for validating model 
                                 prog='python -m mistk_test_harness',
                                 formatter_class=argparse.RawDescriptionHelpFormatter,
                                 epilog='Examples: \n' + 
-                                'python -m mistk_test_harness --train /my/dataset/folder --model-path /my/model/folder mymodel.MyImplementedModel\n' +
-                                'python -m mistk_test_harness --train /my/dataset/folder --model-path /my/model/folder http://localhost:8080\n' +
-                                'python -m mistk_test_harness --train /my/dataset/folder --model-path /my/model/folder repo/mymodelimpl\n' +
+                                'python -m mistk_test_harness --train /my/dataset/folder --model-path /my/model/folder --model-save-path /my/trained/model/folder mymodel.MyImplementedModel\n' +
+                                'python -m mistk_test_harness --train /my/dataset/folder --model-path /my/model/folder --model-save-path /my/trained/model/folder http://localhost:8080\n' +
+                                'python -m mistk_test_harness --train /my/dataset/folder --model-path /my/model/folder --model-save-path /my/trained/model/folder repo/mymodelimpl\n' +
                                 'python -m mistk_test_harness --predict /my/dataset/folder --model-path /my/model/folder --predictions-path /my/predictions/folder\n' +
                                 '\t--ground-truth-path /ground/truth/folder --evaluate BinaryClassification mymodel.MyImplementedModel\n')
 parser.add_argument('model', metavar='MODEL',
                     help='model module/package, service endpoint URL, or Docker image')
 parser.add_argument('--train', metavar='PATH',
-                    help='Train over the dataset at the local path (requires --model-path)')
+                    help='Train over the dataset at the local path (requires --model-path and --model-save-path)')
 parser.add_argument('--predict', metavar='PATH',
                     help='Run predictions over the dataset at the local path')
 parser.add_argument('--evaluate', metavar='TYPE',
@@ -51,7 +51,9 @@ parser.add_argument('--predictions-path', metavar='PATH',
 parser.add_argument('--ground-truth-path', metavar='PATH',
                     help='Local folder path containing dataset ground truth')
 parser.add_argument('--model-path', metavar='PATH',
-                    help='Local folder path to save/load model checkpoints')
+                    help='Local folder path to load model checkpoints')
+parser.add_argument('--model-save-path', metavar='PATH',
+                    help='Local folder path to save model checkpoints')
 parser.add_argument('--model-props', metavar='FILE',
                     help='Local file containing json dictionary of model properties')
 parser.add_argument('--hyperparams', metavar='FILE',
@@ -63,10 +65,6 @@ args = parser.parse_args()
 
 if not args.logs:
     logging.getLogger().setLevel(logging.FATAL)
-
-if args.train and not args.model_path:
-    print('--train flag requires --model-path')
-    sys.exit()
 
 if args.evaluate:
     if args.evaluate not in evaluation_types:
@@ -96,7 +94,8 @@ model = args.model
 model_train_path = args.train
 model_test_path = args.predict
 model_predictions_path = args.predictions_path
-model_save_path = args.model_path
+model_path = args.model_path
+model_save_path = args.model_save_path
 container = None
 
 if not args.model.startswith('http:') and re.match('[\w:-]*/[\w:-]*', args.model) is not None:
@@ -115,8 +114,8 @@ if not args.model.startswith('http:') and re.match('[\w:-]*/[\w:-]*', args.model
     if args.predictions_path:
         volumes[args.predictions_path] = {'bind': '/tmp/predictions', 'mode': 'rw'}
         model_predictions_path = '/tmp/predictions'
-    if args.model_path:
-        volumes[args.model_path] = {'bind': '/tmp/model', 'mode': 'rw'}
+    if args.model_save_path:
+        volumes[args.model_save_path] = {'bind': '/tmp/model', 'mode': 'rw'}
         model_save_path = '/tmp/model'
 
     print('Starting container ' + args.model)
@@ -138,7 +137,7 @@ if args.stream_predict:
     objectives.append('streaming_prediction')
 
 if args.train or args.predict or args.stream_predict:
-    harness.model_init(model, objectives, dataset_map, model_save_path, model_props, hyperparams)
+    harness.model_init(model, objectives, dataset_map, model_path, model_props, hyperparams)
 
     if args.train:
         harness.model_train(model_save_path)

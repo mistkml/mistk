@@ -213,12 +213,12 @@ paths:
         \ path\n"
       operationId: "save_predictions"
       parameters:
-      - in: "query"
-        name: "dataPath"
+      - name: "dataPath"
+        in: "query"
         description: "A path pointing to the directory where the predictions are to\
           \ be saved.\n"
-        type: "string"
         required: true
+        type: "string"
       responses:
         200:
           description: "Returns 200 if the task was successfully submitted."
@@ -448,15 +448,18 @@ definitions:
         owner: "owner"
         creationTime: "2000-01-23T04:56:07.000+00:00"
         kind: "kind"
-        modificationTime: "2000-01-23T04:56:07.000+00:00"
+        displayName: "displayName"
         resourceVersion: 0
-        name: "name"
         description: "description"
         resources:
         - "resources"
         - "resources"
-        id: "046b6c7f-0b8a-43b9-b35d-6489e6daee91"
         labels: "{}"
+        public: true
+        modificationTime: "2000-01-23T04:56:07.000+00:00"
+        name: "name"
+        id: "046b6c7f-0b8a-43b9-b35d-6489e6daee91"
+        group: "group"
   ObjectInfo:
     type: "object"
     properties:
@@ -473,9 +476,14 @@ definitions:
           \ automatically.\n"
       name:
         type: "string"
-        description: "The unique name of the object. Names of resources should\
+        description: "The unique name of the object. Names of SML resources should\
           \ be up to maximum length of 253 characters and consist of lower case alphanumeric\
           \ characters, -, and .\n"
+      displayName:
+        type: "string"
+        description: "The name of this resoure, as presented via this UI.  This field\
+          \ can have spaces and upper and lower case alphanumeric  characters as well\
+          \ as spaces.\n"
       description:
         type: "string"
         description: "A documentation description of the resource.  This string can\
@@ -486,6 +494,13 @@ definitions:
       owner:
         type: "string"
         description: "The owner/creator of this object.\n"
+      group:
+        type: "string"
+        description: "The group for this object.\n"
+      public:
+        type: "boolean"
+        description: "Boolean flag indicating whether this resource will be  accessible\
+          \ to members outside of the group\n"
       labels:
         type: "object"
         description: "Key-value pairs of annotations associate with the object.\n"
@@ -518,15 +533,18 @@ definitions:
       owner: "owner"
       creationTime: "2000-01-23T04:56:07.000+00:00"
       kind: "kind"
-      modificationTime: "2000-01-23T04:56:07.000+00:00"
+      displayName: "displayName"
       resourceVersion: 0
-      name: "name"
       description: "description"
       resources:
       - "resources"
       - "resources"
-      id: "046b6c7f-0b8a-43b9-b35d-6489e6daee91"
       labels: "{}"
+      public: true
+      modificationTime: "2000-01-23T04:56:07.000+00:00"
+      name: "name"
+      id: "046b6c7f-0b8a-43b9-b35d-6489e6daee91"
+      group: "group"
   Dataset:
     type: "object"
     required:
@@ -562,6 +580,8 @@ definitions:
       statistics:
         $ref: "#/definitions/DatasetStatistics"
       defaultGroundTruthSetReference:
+        description: "A reference to the default ground truth set that is associated\
+          \ with this dataset\n    \n"
         $ref: "#/definitions/ObjectReference"
     description: "Defines the location within the data lake where a dataset can be\
       \ found. It is linked to a DatasetClass\n"
@@ -580,6 +600,9 @@ definitions:
         type: "string"
         description: "The type of the object being referenced. This is often optional\
           \ as it will be inferrred by the context.\n"
+      group:
+        type: "string"
+        description: "The group (namespace) of this object.\n"
       id:
         type: "string"
         format: "uuid"

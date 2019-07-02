@@ -34,9 +34,12 @@ class ObjectInfo(object):
         'kind': 'str',
         'id': 'str',
         'name': 'str',
+        'display_name': 'str',
         'description': 'str',
         'summary': 'str',
         'owner': 'str',
+        'group': 'str',
+        'public': 'bool',
         'labels': 'object',
         'resources': 'list[str]',
         'resource_version': 'int',
@@ -48,9 +51,12 @@ class ObjectInfo(object):
         'kind': 'kind',
         'id': 'id',
         'name': 'name',
+        'display_name': 'displayName',
         'description': 'description',
         'summary': 'summary',
         'owner': 'owner',
+        'group': 'group',
+        'public': 'public',
         'labels': 'labels',
         'resources': 'resources',
         'resource_version': 'resourceVersion',
@@ -58,15 +64,18 @@ class ObjectInfo(object):
         'modification_time': 'modificationTime'
     }
 
-    def __init__(self, kind=None, id=None, name=None, description=None, summary=None, owner=None, labels=None, resources=None, resource_version=None, creation_time=None, modification_time=None):  # noqa: E501
+    def __init__(self, kind=None, id=None, name=None, display_name=None, description=None, summary=None, owner=None, group=None, public=None, labels=None, resources=None, resource_version=None, creation_time=None, modification_time=None):  # noqa: E501
         """ObjectInfo - a model defined in Swagger"""  # noqa: E501
 
         self._kind = None
         self._id = None
         self._name = None
+        self._display_name = None
         self._description = None
         self._summary = None
         self._owner = None
+        self._group = None
+        self._public = None
         self._labels = None
         self._resources = None
         self._resource_version = None
@@ -80,12 +89,18 @@ class ObjectInfo(object):
             self.id = id
         if name is not None:
             self.name = name
+        if display_name is not None:
+            self.display_name = display_name
         if description is not None:
             self.description = description
         if summary is not None:
             self.summary = summary
         if owner is not None:
             self.owner = owner
+        if group is not None:
+            self.group = group
+        if public is not None:
+            self.public = public
         if labels is not None:
             self.labels = labels
         if resources is not None:
@@ -147,7 +162,7 @@ class ObjectInfo(object):
     def name(self):
         """Gets the name of this ObjectInfo.  # noqa: E501
 
-        The unique name of the object. Names of resources should be up to maximum length of 253 characters and consist of lower case alphanumeric characters, -, and .   # noqa: E501
+        The unique name of the object. Names of SML resources should be up to maximum length of 253 characters and consist of lower case alphanumeric characters, -, and .   # noqa: E501
 
         :return: The name of this ObjectInfo.  # noqa: E501
         :rtype: str
@@ -158,13 +173,36 @@ class ObjectInfo(object):
     def name(self, name):
         """Sets the name of this ObjectInfo.
 
-        The unique name of the object. Names of resources should be up to maximum length of 253 characters and consist of lower case alphanumeric characters, -, and .   # noqa: E501
+        The unique name of the object. Names of SML resources should be up to maximum length of 253 characters and consist of lower case alphanumeric characters, -, and .   # noqa: E501
 
         :param name: The name of this ObjectInfo.  # noqa: E501
         :type: str
         """
 
         self._name = name
+
+    @property
+    def display_name(self):
+        """Gets the display_name of this ObjectInfo.  # noqa: E501
+
+        The name of this resoure, as presented via this UI.  This field can have spaces and upper and lower case alphanumeric  characters as well as spaces.   # noqa: E501
+
+        :return: The display_name of this ObjectInfo.  # noqa: E501
+        :rtype: str
+        """
+        return self._display_name
+
+    @display_name.setter
+    def display_name(self, display_name):
+        """Sets the display_name of this ObjectInfo.
+
+        The name of this resoure, as presented via this UI.  This field can have spaces and upper and lower case alphanumeric  characters as well as spaces.   # noqa: E501
+
+        :param display_name: The display_name of this ObjectInfo.  # noqa: E501
+        :type: str
+        """
+
+        self._display_name = display_name
 
     @property
     def description(self):
@@ -234,6 +272,52 @@ class ObjectInfo(object):
         """
 
         self._owner = owner
+
+    @property
+    def group(self):
+        """Gets the group of this ObjectInfo.  # noqa: E501
+
+        The group for this object.   # noqa: E501
+
+        :return: The group of this ObjectInfo.  # noqa: E501
+        :rtype: str
+        """
+        return self._group
+
+    @group.setter
+    def group(self, group):
+        """Sets the group of this ObjectInfo.
+
+        The group for this object.   # noqa: E501
+
+        :param group: The group of this ObjectInfo.  # noqa: E501
+        :type: str
+        """
+
+        self._group = group
+
+    @property
+    def public(self):
+        """Gets the public of this ObjectInfo.  # noqa: E501
+
+        Boolean flag indicating whether this resource will be  accessible to members outside of the group   # noqa: E501
+
+        :return: The public of this ObjectInfo.  # noqa: E501
+        :rtype: bool
+        """
+        return self._public
+
+    @public.setter
+    def public(self, public):
+        """Sets the public of this ObjectInfo.
+
+        Boolean flag indicating whether this resource will be  accessible to members outside of the group   # noqa: E501
+
+        :param public: The public of this ObjectInfo.  # noqa: E501
+        :type: bool
+        """
+
+        self._public = public
 
     @property
     def labels(self):

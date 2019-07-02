@@ -2,7 +2,7 @@ NAME:=mistk
 
 include common.mk
 
-API_VERSION:="0.3.5"
+API_VERSION:="0.4.0"
 
 .PHONY: help
 
@@ -14,13 +14,14 @@ all: $(NAME) docs dist
 
 clean: ## Remove all build artifacts
 	$(PYTHON) setup.py clean
-	rm -rf gen $(NAME)/server test-harness/mistk_test_harness/client docs dist *.egg-info test-harness/*.egg-info sphinx_docs build test-harness/build
+	rm -rf build test-harness/build gen $(NAME)/server test-harness/mistk_test_harness/client docs dist *.egg-info test-harness/*.egg-info sphinx_docs
+	find . -name __pycache__ -exec rm -rf {} \;
 
 gen:: gen/$(NAME)_server
 
-gen/$(NAME)_server: $(API) 
+gen/$(NAME)_server: $(API)
 	rm -rf gen/$(NAME)_server
-	$(CODEGEN) generate -l python-flask -o $(OUTPUT_BASE_DIR)/gen/$(NAME)_server -i $(YAML_FILE) -D packageName=$(NAME).server	
+	$(CODEGEN) generate -l python-flask -o $(OUTPUT_BASE_DIR)/gen/$(NAME)_server -i $(YAML_FILE) -D packageName=$(NAME).server
 
 $(NAME)/server: gen/$(NAME)_server
 	rm -rf $(NAME)/server
@@ -46,8 +47,8 @@ $(NAME): $(NAME)/server $(NAME)/client
 sphinx_docs:
 	rm -rf sphinx_docs
 	mkdir -p sphinx_docs
-	sphinx-apidoc -o sphinx_docs/ mistk -F -e -H "MISTK Model Developer API" -V $(API_VERSION) -R $(API_VERSION) -A "Asif Dipon, Andrew Shilliday, Jason Isabel, Tom Damiano"
-	pushd sphinx_docs && make html && popd
+	sphinx-apidoc -o sphinx_docs/ mistk -F -e -H "MISTK Model Developer API" -V $(API_VERSION) -R $(API_VERSION) -A "Tom Damiano, Andrew Shilliday, Asif Dipon"
+	pushd sphinx_docs && make latexpdf html && popd
 
 docs: $(API) ## Generate documentation for the API
 	rm -rf docs
@@ -60,6 +61,3 @@ dist: $(NAME) docs  $(shell find $(NAME)) test-harness $(shell find . -maxdepth 
 
 install: dist
 	$(PYTHON) -m pip install $(shell find dist -type f) --user
-
-
-

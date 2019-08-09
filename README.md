@@ -1,6 +1,6 @@
 # Model Integration Software ToolKit (MISTK) SDK
-
-MISTK is an ecosystem for integrating, validating, and evaluating machine learning models and algorithms.
+	
+MISTK is an ecosystem for integrating, validating, and evaluating machine learning models and algorithms. 
 
 ## Getting Started
 

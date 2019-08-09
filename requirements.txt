@@ -1,0 +1,10 @@
+connexion == 1.1.15
+certifi >= 2019.3.9
+python_dateutil == 2.6.1
+setuptools == 21.0.0
+transitions == 0.6.4
+pypubsub == 4.0.0
+rwlock == 0.0.7
+wsgiserver == 1.3
+autologging == 1.2.1    
+PyYAML == 5.1.0

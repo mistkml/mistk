@@ -39,7 +39,7 @@ parser = argparse.ArgumentParser(description='Test harness for validating model 
 parser.add_argument('model', metavar='MODEL',
                     help='model module/package, service endpoint URL, or Docker image')
 parser.add_argument('--train', metavar='PATH',
-                    help='Train over the dataset at the local path (requires --model-path and --model-save-path)')
+                    help='Train over the dataset at the local path ')
 parser.add_argument('--predict', metavar='PATH',
                     help='Run predictions over the dataset at the local path')
 parser.add_argument('--evaluate', metavar='TYPE',
@@ -47,13 +47,13 @@ parser.add_argument('--evaluate', metavar='TYPE',
                     ', '.join(evaluation_types) + 
                     ' (requires --predictions-path, --ground-truth-path)')
 parser.add_argument('--predictions-path', metavar='PATH',
-                    help='Local folder path to save/load model predictions')
+                    help='Local folder path to save/load model predictions, used with the --predict and --evaluate options')
 parser.add_argument('--ground-truth-path', metavar='PATH',
-                    help='Local folder path containing dataset ground truth')
+                    help='Local folder path containing dataset ground truth, used with the --evaluate option')
 parser.add_argument('--model-path', metavar='PATH',
-                    help='Local folder path to load model checkpoints')
+                    help='Local folder path to load model checkpoints, used with the --train or --predict options')
 parser.add_argument('--model-save-path', metavar='PATH',
-                    help='Local folder path to save model checkpoints')
+                    help='Local folder path to save model checkpoints, used with the --train option')
 parser.add_argument('--model-props', metavar='FILE',
                     help='Local file containing json dictionary of model properties')
 parser.add_argument('--hyperparams', metavar='FILE',
@@ -102,8 +102,9 @@ if not args.model.startswith('http:') and re.match('[\w:-]*/[\w:-]*', args.model
     volumes = {}
     if args.train and args.predict and args.train == args.predict:
         volumes[args.train] = {'bind': '/tmp/data', 'mode': 'rw'}
-        model_train_path = '/tmp/data'
-        model_test_path = '/tmp/data'
+        volumes[args.predict] = {'bind': '/tmp/test', 'mode': 'rw'}
+        model_train_path = '/tmp/train'
+        model_test_path = '/tmp/test'
     elif args.train:
         volumes[args.train] = {'bind': '/tmp/train', 'mode': 'rw'}
         model_train_path = '/tmp/train'

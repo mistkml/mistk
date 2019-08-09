@@ -20,9 +20,9 @@ import os
 import sys
 import time
 
-from mistk.abstract_model import AbstractModel
+from mistk.model.abstract_model import AbstractModel
 from mistk.data import ModelInstanceInitParams, MistkDataset, ObjectInfo
-from mistk.service import ModelInstanceEndpoint
+from mistk.model.service import ModelInstanceEndpoint
 from mistk_test_harness import model_service_wrapper
 
 class TestHarness(object):
@@ -76,7 +76,7 @@ class TestHarness(object):
 
     def model_train(self, model_save_path=None):
         """
-        Call train and, if model_path is supplied, save_model on model.
+        Call train and, if model_save_path is supplied, save_model on model.
         Output model status.
         """       
         self._model_service.train()
@@ -95,9 +95,7 @@ class TestHarness(object):
         self.wait_for_state('predict', 'ready')
         
         if predictions_path:
-            dataset = MistkDataset(object_info=ObjectInfo(name='predictions-data'),
-                                        data_path=predictions_path)
-            self._model_service.save_predictions(dataset)
+            self._model_service.save_predictions(predictions_path)
             self.wait_for_state('save_predictions', 'ready')
             
     def model_stream_predict(self, stream_input):

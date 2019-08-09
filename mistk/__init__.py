@@ -19,3 +19,5 @@ import mistk.log as log
 
 log.config(__name__)
 logger = log.get_logger(__name__)
+
+from mistk.model import abstract_model, service

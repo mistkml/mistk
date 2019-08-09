@@ -15,8 +15,7 @@
 #
 ##############################################################################
 
-from mistk_test_harness.client import ApiClient, Configuration
-from mistk_test_harness.client import ModelInstanceEndpointApi
+from mistk.model.client import ApiClient, Configuration, ModelInstanceEndpointApi
 
 class ModelServiceWrapper(object):
 
@@ -56,8 +55,8 @@ class ModelServiceWrapper(object):
     def stream_predict(self, data_map):
         return self._mi_api.stream_predict(data_map=data_map)
 
-    def save_predictions(self, dataset):
-        self._mi_api.save_predictions(dataset=dataset)
+    def save_predictions(self, data_path):
+        self._mi_api.save_predictions(data_path=data_path)
     
     def get_status(self):
         return self._mi_api.get_status()

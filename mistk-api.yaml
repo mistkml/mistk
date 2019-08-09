@@ -640,6 +640,14 @@ definitions:
         properties: {}
       dataParameters:
         $ref: "#/definitions/MetricDataParameters"
+      assessmentTypes:
+        type: "array"
+        description: "The types of assessments this metric can be used for.\n"
+        items:
+          type: "string"
+      imageId:
+        type: "string"
+        description: "The docker image ID used by the metric instance \n"
     description: "Evaluation criteria for measuring the performance of an algorithm’\
       s implementation.\n"
   MetricDataParameters:

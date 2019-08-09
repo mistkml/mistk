@@ -22,7 +22,7 @@ from connexion.apps.flask_app import FlaskJSONEncoder
 import six
 
 import mistk.data
-from mistk.server.models.object_info import ObjectInfo
+from mistk.model.server.models.object_info import ObjectInfo
 import json
 
 

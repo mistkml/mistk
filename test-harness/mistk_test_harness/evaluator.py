@@ -170,7 +170,7 @@ def perform_assessment(eval_type, predictions_path, ground_truth_path):
                         if len(evalResultAsList) == len(label_classes):
                             evalResultAsDict = {}
                             for index, label in enumerate(label_classes):
-                                evalResultAsDict[label] = evalResultAsList[index]
+                                evalResultAsDict[str(label)] = evalResultAsList[index]
                             eval_dict[metric.method] = evalResultAsDict
                         else:
                             eval_dict[metric.method] = evalResultAsList

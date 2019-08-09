@@ -15,27 +15,21 @@
 #
 ##############################################################################
 
-import setuptools
+import sys
+import importlib
+import mistk.model.service
+from mistk.abstract_model import AbstractModel
 
+_endpoint_service = mistk.model.service.ModelInstanceEndpoint()
 
-REQUIRES=[
-    'connexion == 1.1.15',
-    'certifi >= 2019.3.9',
-    'python_dateutil == 2.6.1',
-    'setuptools == 21.0.0',
-    'transitions == 0.6.4',
-    'pypubsub == 4.0.0',
-    'rwlock == 0.0.7',
-    'wsgiserver == 1.3',
-    'autologging == 1.2.1',    
-    'PyYAML == 5.1.0',
-]
+if len(sys.argv) <= 2:
+    raise RuntimeError("Requires a module and class name as an argument")
 
-setuptools.setup(
-    name='mistk',
-    packages=setuptools.find_packages() + ['conf'],
-    package_data={'conf': ['*.ini']},
-    include_package_data=True,
-    install_requires=REQUIRES,
-    use_scm_version = {"root": "..", "relative_to": __file__},
-    setup_requires=['setuptools_scm'])
+_module = importlib.import_module(sys.argv[1])
+_model = getattr(_module, sys.argv[2])()
+assert isinstance(_model, AbstractModel)
+
+_endpoint_service.model = _model
+_model.endpoint_service = _endpoint_service
+
+_endpoint_service.start_server()

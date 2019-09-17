@@ -18,7 +18,7 @@
 import sys
 import importlib
 import mistk.model.service
-from mistk.abstract_model import AbstractModel
+from mistk.model.abstract_model import AbstractModel
 
 _endpoint_service = mistk.model.service.ModelInstanceEndpoint()
 

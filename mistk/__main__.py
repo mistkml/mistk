@@ -17,10 +17,10 @@
 
 import sys
 import importlib
-import mistk.service
-from mistk.abstract_model import AbstractModel
+import mistk.model.service
+from mistk.model.abstract_model import AbstractModel
 
-_endpoint_service = mistk.service.ModelInstanceEndpoint()
+_endpoint_service = mistk.model.service.ModelInstanceEndpoint()
 
 if len(sys.argv) <= 2:
     raise RuntimeError("Requires a module and class name as an argument")

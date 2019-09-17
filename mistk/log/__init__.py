@@ -20,12 +20,24 @@ Logging module that configures the logger used by a specific component in the
 MISTK architecture. 
 """
 
-import os
+import os, errno
 import json
 import logging.config
 import mistk.cfg as cfg
 
 DEFAULT_CFG_FILE=os.path.join(os.path.dirname(__file__), "../../conf/log_config.json")
+
+def mkdir_p(path):
+    """http://stackoverflow.com/a/600612/190597 (tzot)"""
+    try:
+        os.makedirs(path, exist_ok=True)  # Python>3.2
+    except TypeError:
+        try:
+            os.makedirs(path)
+        except OSError as exc: # Python >2.5
+            if exc.errno == errno.EEXIST and os.path.isdir(path):
+                pass
+            else: raise
 
 def config(component, file = cfg.get("CLUSTER", "mistk.log.config", DEFAULT_CFG_FILE)):
     """
@@ -37,10 +49,16 @@ def config(component, file = cfg.get("CLUSTER", "mistk.log.config", DEFAULT_CFG_
     """
     with open(file) as reader:
         log_config = json.load(reader)
-        
     log_path = log_config['handlers']['file_handler']['filename']
-    log_name = component + '.log'
+    if os.getenv("HOSTNAME"):
+        log_name = '%s_%s.log' % (component, os.getenv("HOSTNAME"))
+    else:
+        log_name = '%s.log' % (component)
     log_config['handlers']['file_handler']['filename'] = os.path.join(log_path, log_name)
+    
+    # Ensure that the directory exists
+    mkdir_p(log_path)
+    
     logging.config.dictConfig(log_config)
 
 def get_logger(name=None):

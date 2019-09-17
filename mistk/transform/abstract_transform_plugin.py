@@ -25,7 +25,7 @@ import mistk.transform
 from mistk import logger
 
 # The model states
-_model_states = {'started', 'ready', 'failed', 
+_transform_states = {'started', 'ready', 'failed', 
                   'transforming','terminating', 'terminated'}
 
 
@@ -43,12 +43,12 @@ class AbstractTransformPlugin (metaclass=ABCMeta):
         
         self.state = None
         self._endpoint_service = None
-        states = [State(n, on_enter='new_state_entered') for n in _model_states]
+        states = [State(n, on_enter='new_state_entered') for n in _transform_states]
         self._machine = Machine(model=self, states=states, initial='started', auto_transitions=False)
-        self._machine.add_transition(trigger='fail', source=list(_model_states-{'terminated'}), dest='failed')
+        self._machine.add_transition(trigger='fail', source=list(_transform_states-{'terminated'}), dest='failed')
         self._machine.add_transition(trigger='ready', source=['started', 'transforming'], dest='ready')
         self._machine.add_transition(trigger='transform', source=['started', 'ready'], dest='transforming', after='_do_transform')
-        self._machine.add_transition(trigger='terminate', source=list(_model_states-{'terminating', 'terminated', 'failed'}), dest='terminating', after='_do_terminate')
+        self._machine.add_transition(trigger='terminate', source=list(_transform_states-{'terminating', 'terminated', 'failed'}), dest='terminating', after='_do_terminate')
         self._machine.add_transition(trigger='terminated', source='terminating', dest='terminated')
     
     def update_status(self, payload):

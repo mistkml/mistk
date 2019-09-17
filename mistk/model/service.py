@@ -100,7 +100,7 @@ class ModelInstanceEndpoint():
         
         :param module: THe name of the module
         """
-        return yaml.load(pkg_resources.ResourceManager().resource_stream('mistk', '/server/swagger/swagger.yaml'), Loader=yaml.FullLoader)
+        return yaml.load(pkg_resources.ResourceManager().resource_stream('mistk', '/model/server/swagger/swagger.yaml'), Loader=yaml.FullLoader)
 
     @property
     def state_machine(self):

@@ -40,7 +40,7 @@ paths:
           description: "General server runtime exception"
           schema:
             $ref: "#/definitions/ServiceError"
-      x-swagger-router-controller: "mistk.service"
+      x-swagger-router-controller: "mistk.model.service"
   /loadData:
     post:
       tags:
@@ -80,7 +80,7 @@ paths:
           description: "General server runtime exception"
           schema:
             $ref: "#/definitions/ServiceError"
-      x-swagger-router-controller: "mistk.service"
+      x-swagger-router-controller: "mistk.model.service"
   /buildModel:
     post:
       tags:
@@ -106,7 +106,7 @@ paths:
           description: "General server runtime exception"
           schema:
             $ref: "#/definitions/ServiceError"
-      x-swagger-router-controller: "mistk.service"
+      x-swagger-router-controller: "mistk.model.service"
   /train:
     post:
       tags:
@@ -126,7 +126,7 @@ paths:
           description: "General server runtime exception"
           schema:
             $ref: "#/definitions/ServiceError"
-      x-swagger-router-controller: "mistk.service"
+      x-swagger-router-controller: "mistk.model.service"
   /saveModel:
     post:
       tags:
@@ -152,7 +152,7 @@ paths:
           description: "General server runtime exception"
           schema:
             $ref: "#/definitions/ServiceError"
-      x-swagger-router-controller: "mistk.service"
+      x-swagger-router-controller: "mistk.model.service"
   /predict:
     post:
       tags:
@@ -172,7 +172,7 @@ paths:
           description: "General server runtime exception"
           schema:
             $ref: "#/definitions/ServiceError"
-      x-swagger-router-controller: "mistk.service"
+      x-swagger-router-controller: "mistk.model.service"
   /streamPredict:
     post:
       tags:
@@ -203,7 +203,7 @@ paths:
           description: "General server runtime exception"
           schema:
             $ref: "#/definitions/ServiceError"
-      x-swagger-router-controller: "mistk.service"
+      x-swagger-router-controller: "mistk.model.service"
   /savePredictions:
     post:
       tags:
@@ -230,7 +230,7 @@ paths:
           description: "General server runtime exception"
           schema:
             $ref: "#/definitions/ServiceError"
-      x-swagger-router-controller: "mistk.service"
+      x-swagger-router-controller: "mistk.model.service"
   /pause:
     post:
       tags:
@@ -251,7 +251,7 @@ paths:
           description: "General server runtime exception"
           schema:
             $ref: "#/definitions/ServiceError"
-      x-swagger-router-controller: "mistk.service"
+      x-swagger-router-controller: "mistk.model.service"
   /resumeTraining:
     post:
       tags:
@@ -271,7 +271,7 @@ paths:
           description: "General server runtime exception"
           schema:
             $ref: "#/definitions/ServiceError"
-      x-swagger-router-controller: "mistk.service"
+      x-swagger-router-controller: "mistk.model.service"
   /resumePredict:
     post:
       tags:
@@ -291,7 +291,7 @@ paths:
           description: "General server runtime exception"
           schema:
             $ref: "#/definitions/ServiceError"
-      x-swagger-router-controller: "mistk.service"
+      x-swagger-router-controller: "mistk.model.service"
   /status:
     get:
       tags:
@@ -319,7 +319,7 @@ paths:
           description: "Returns the status"
           schema:
             $ref: "#/definitions/ModelInstanceStatus"
-      x-swagger-router-controller: "mistk.service"
+      x-swagger-router-controller: "mistk.model.service"
   /shutdown:
     post:
       tags:
@@ -339,7 +339,7 @@ paths:
           description: "General server runtime exception"
           schema:
             $ref: "#/definitions/ServiceError"
-      x-swagger-router-controller: "mistk.service"
+      x-swagger-router-controller: "mistk.model.service"
   /reset:
     post:
       tags:
@@ -357,7 +357,7 @@ paths:
             $ref: "#/definitions/ServiceError"
         500:
           description: "General server runtime exception"
-      x-swagger-router-controller: "mistk.service"
+      x-swagger-router-controller: "mistk.model.service"
 definitions:
   MistkDataset:
     allOf:
@@ -387,18 +387,38 @@ definitions:
           - "transfer_learning"
       modelProperties:
         type: "object"
-        description: "A dictionary of model properties."
+        example:
+          arch: "densenet"
+          model_load_file: "checkpoint.pth"
+          num_labels: 1000
+        description: "A dictionary of settings or configuration values that are passed\
+          \ from the ecosystem, but are not considered model hyperparameters. Model\
+          \  properties are typically defined by a specific implementation of an \
+          \ algorithm (ie. a PyTorch implementation of Densenet may have different\
+          \  properties than a Tensorflow implementation). \n"
         properties: {}
       hyperparameters:
         type: "object"
-        description: "A dictionary mapping hyperparameter name to value"
+        example:
+          learning_rate: 0.001
+          momentum: 0.9
+          weight_decay: 4.0E-4
+        description: "A dictionary of hyperparameters that are used by the model.\
+          \ Hyperparameters are typically defined by the algorithm that a model is\
+          \ based on. \n"
         properties: {}
     example:
-      hyperparameters: "{}"
+      hyperparameters:
+        learning_rate: 0.001
+        momentum: 0.9
+        weight_decay: 4.0E-4
       objectives:
       - "training"
       - "training"
-      modelProperties: "{}"
+      modelProperties:
+        arch: "densenet"
+        model_load_file: "checkpoint.pth"
+        num_labels: 1000
   ServiceError:
     type: "object"
     required:

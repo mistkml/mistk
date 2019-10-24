@@ -21,6 +21,7 @@ import logging
 import os
 import time
 import pandas
+import csv
 import numpy as np
 from io import StringIO
 from sklearn.preprocessing import MultiLabelBinarizer
@@ -29,19 +30,58 @@ import mistk.data.utils as utils
 from mistk.data import Metric
 
 def perform_assessment(eval_type, predictions_path, ground_truth_path):
+    
+    # load prediction results
     full_predictions_path = os.path.join(predictions_path, "predictions.csv")
     logging.info("Reading results from " + full_predictions_path)
-    with open(full_predictions_path) as reader:
-        results_csv = reader.read()
+    results_csv = []
+    possible_cols = ['rowid', 'labels', 'confidence', 'bounds']
+    with open(full_predictions_path) as fp:
+        # Check if the file has a header line, skip if necessary
+        has_header = csv.Sniffer().has_header(fp.read(2048))
+        fp.seek(0)  # Rewind.
+        reader = csv.reader(fp)
+        # ignore header for now
+        if has_header:
+            next(reader)
+        for data in reader:
+            results_csv.append(data)        
+    results_df = pandas.DataFrame(results_csv)
+    # rename columns
+    for i, _ in enumerate(results_df.columns.values):
+        if i < len(possible_cols):
+            results_df.rename(columns = {i : possible_cols[i]}, inplace = True)
+    # create columns if they do not exist
+    for nancol in possible_cols[len(results_df.columns):len(possible_cols)]:
+        results_df[nancol] = np.nan
     
+    # load ground truth
     full_ground_truth_path = os.path.join(ground_truth_path, "ground_truth.csv")
     logging.info("Reading ground truth from " + full_ground_truth_path)
-    with open(full_ground_truth_path) as reader:
-        truth_csv = reader.read()     
-        
-    results_df = pandas.read_csv(StringIO(results_csv), header=None, names=['rowid', 'labels', 'confidence', 'bounds'])
-    truth_df = pandas.read_csv(StringIO(truth_csv), header=None, names=['rowid', 'labels', 'bounds'])
+    truth_csv = []
+    possible_cols = ['rowid', 'labels', 'bounds']
+    with open(full_ground_truth_path) as fp:
+        # Check if the file has a header line, skip if necessary
+        has_header = csv.Sniffer().has_header(fp.read(2048))
+        fp.seek(0)  # Rewind.
+        reader = csv.reader(fp)
+        # ignore header for now
+        if has_header:
+            next(reader)
+        for data in reader:
+            truth_csv.append(data) 
+    truth_df = pandas.DataFrame(truth_csv)
+    # rename columns
+    for i, _ in enumerate(truth_df.columns.values):
+        if i < len(possible_cols):
+            truth_df.rename(columns = {i : possible_cols[i]}, inplace = True)
+    # create columns if they do not exist
+    for nancol in possible_cols[len(truth_df.columns):len(possible_cols)]:
+        truth_df[nancol] = np.nan
     
+    # match ground truth to results by id 
+    truth_df = truth_df.loc[truth_df['rowid'].isin(results_df['rowid'])]     
+        
     # sort the rows by id
     results_df.sort_values(by='rowid', inplace=True)
     truth_df.sort_values(by='rowid', inplace=True)
@@ -59,7 +99,7 @@ def perform_assessment(eval_type, predictions_path, ground_truth_path):
         truth_labels_matrix = label_mlb.transform(parsed_truth_labels)
         results_labels_matrix = label_mlb.transform(parsed_results_labels)
         
-        if not results_df['confidence'].hasnans:
+        if 'confidence' in results_df and not results_df['confidence'].hasnans:
             parsed_confidence = (results_df['confidence'].str.split().values.tolist()
                                  if results_df['confidence'].dtype == 'object' 
                                  else np.array(np.transpose(np.matrix(results_df['confidence'].values))))
@@ -149,7 +189,7 @@ def perform_assessment(eval_type, predictions_path, ground_truth_path):
             if metric.data_parameters.prediction_labels:
                 args[metric.data_parameters.prediction_labels] = results_labels_matrix
                     
-            if metric.data_parameters.prediction_scores and not results_df['confidence'].hasnans:           
+            if metric.data_parameters.prediction_scores and 'confidence' in results_df and not results_df['confidence'].hasnans:           
                 args[metric.data_parameters.prediction_scores] = confidence_matrix
                 
             if metric.data_parameters.prediction_bounds and not results_df['bounds'].hasnans:

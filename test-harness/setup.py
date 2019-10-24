@@ -32,5 +32,5 @@ setuptools.setup(
     packages=setuptools.find_packages(),
     package_data={'mistk_test_harness': ['*.json']},
     install_requires=REQUIRES,
-    version=os.getenv('VERSION', '1.0.0')
+    version=os.environ.get('VERSION', '1.0.0')
 )

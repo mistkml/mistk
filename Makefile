@@ -74,9 +74,8 @@ $(NAME): $(NAME)/server $(NAME)/client
 
 dist: $(NAME) docs  $(shell find $(NAME)) test-harness $(shell find . -maxdepth 1 -type f) ## Create a python binary wheel distribution
 	rm -rf dist && mkdir dist
-	export VERSION=$(VERSION)
-	$(PYTHON) setup.py bdist_wheel -d dist/$(NAME)/
-	cd test-harness && $(PYTHON) setup.py bdist_wheel  -d ../dist/$(NAME)-test-harness/
+	VERSION=$(VERSION) $(PYTHON) setup.py bdist_wheel -d dist/$(NAME)/
+	cd test-harness && VERSION=$(VERSION) $(PYTHON) setup.py bdist_wheel  -d ../dist/$(NAME)-test-harness/
 
 install: dist ## Install the python library for the local user
 	$(PYTHON) -m pip install $(shell find dist -type f) --user

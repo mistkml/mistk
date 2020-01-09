@@ -256,9 +256,8 @@ class TransformPluginEndpoint():
     
     
     def transform(self, initParams):  # noqa: E501
-        """Performs the transforms defined for this plugin
-    
-         # noqa: E501
+        """
+        Performs the transforms defined for this plugin
     
         :param initParams: A list of directory paths where input files can be found.
         :type initParams: dict | bytes
@@ -282,6 +281,20 @@ class TransformPluginEndpoint():
             return ServiceError(500, str(inst)), 500
         
         self.add_task(task)
+        
+    def get_api_version(self):
+        """
+        Returns the version of the MISTK API
+    
+        :return: The MISTK API version as text
+        """
+        try:
+            version = pkg_resources.require("mistk")[0].version
+            return version, 200
+        except:
+            msg = 'Error occurred while attempting to retrieve MISTK API version'
+            logger.exception(msg)
+            return ServiceError(500, msg), 500
     
     
 def initializeEndpointController(handler, *modules):

@@ -37,6 +37,6 @@ setuptools.setup(
     package_data={'conf': ['*.ini']},
     include_package_data=True,
     install_requires=REQUIRES,
-    version=os.getenv('VERSION', '0.4.3')
+    version=os.getenv('VERSION', '0.4.7')
 )
 

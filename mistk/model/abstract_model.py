@@ -122,7 +122,8 @@ class AbstractModel (metaclass=ABCMeta):
         This method should not be implemented or overwritten by subclasses.  It will be 
         created by the state machine.
         
-        :param objectives: The objectives of this model.
+        :param objectives: The objectives of this model. Possible values include 'training', 'prediction', 
+            'streaming_prediction', and 'transfer_learning'.
         :param props: A dictionary that is parsed from a JSON string. These are settings that are passed from the ecosystem, 
             but are not really considered hyperparameters.  They are not used by the model, but rather the endpoint itself 
             (e.g., where should heartbeats be sent and how often, etc).
@@ -287,7 +288,8 @@ class AbstractModel (metaclass=ABCMeta):
         """
         Called once the endpoint service has launched.  This would typically be the first call made to the service. 
         
-        :param objectives: The objectives for the model.
+        :param objectives: The objectives for the model. Possible values include 'training', 'prediction', 
+            'streaming_prediction', and 'transfer_learning'.
         :param props: A dictionary that is parsed from a JSON string. These are settings that are passed from the ecosystem, 
             but are not really considered hyperparameters.  They are not used by the model, but rather the endpoint itself 
             (e.g., where should heartbeats be sent and how often, etc).
@@ -308,7 +310,8 @@ class AbstractModel (metaclass=ABCMeta):
         """
         Called once the endpoint service has launched.  This would typically be the first call made to the service. 
         
-        :param objective: The objectives for the model.
+        :param objective: The objectives for the model. Possible values include 'training', 'prediction', 
+            'streaming_prediction', and 'transfer_learning'.
         :param props: A dictionary that is parsed from a JSON string. These are settings that are passed from the ecosystem, 
             but are not really considered hyperparameters.  They are not used by the model, but rather the endpoint itself 
             (e.g., where should heartbeats be sent and how often, etc).

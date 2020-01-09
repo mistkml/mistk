@@ -30,7 +30,15 @@ import mistk.data.utils as utils
 from mistk.data import Metric
 
 def perform_assessment(eval_type, predictions_path, ground_truth_path):
+    """
+    Performs a metric's assessment using the predictions and ground truth files provided.
+    Stored the assessment results as a JSON file in the predictions_path
     
+    :param eval_type: The evaluation type. One of {'BinaryClassification', 
+        'MultilabelClassification', 'MulticlassClassification', 'Regression'}
+    :param predictions_path: The directory path where the predictions.csv file is located
+    :param ground_truth_path: The directory path where the ground_truth.csv file is located
+    """
     # load prediction results
     full_predictions_path = os.path.join(predictions_path, "predictions.csv")
     logging.info("Reading results from " + full_predictions_path)

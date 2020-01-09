@@ -20,7 +20,7 @@ import setuptools, os
 REQUIRES=[
     'pandas == 0.20.3',
     'scikit-learn  == 0.19.1',
-    'numpy == 1.13.3',
+    'numpy >= 1.13.3',
     'docker == 2.7.0',
     'scipy == 1.0.0',
     'mistk'
@@ -32,5 +32,5 @@ setuptools.setup(
     packages=setuptools.find_packages(),
     package_data={'mistk_test_harness': ['*.json']},
     install_requires=REQUIRES,
-    version=os.environ.get('VERSION', '1.0.0')
+    version=os.environ.get('VERSION', '0.4.7')
 )

@@ -333,6 +333,21 @@ class ModelInstanceEndpoint():
                     return self._status
         except RuntimeError as inst:
             return ServiceError(500, str(inst)), 500
+    
+    def get_api_version(self):
+        """
+        Returns the version of the MISTK API
+    
+        :return: The MISTK API version as text
+        """
+        try:
+            version = pkg_resources.require("mistk")[0].version
+            return version, 200
+        except:
+            msg = 'Error occurred while attempting to retrieve MISTK API version'
+            logger.exception(msg)
+            return ServiceError(500, msg), 500
+        
       
     def delete_task(self, task):
         """

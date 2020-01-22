@@ -1,5 +1,6 @@
 connexion == 1.1.15
-certifi >= 2019.3.9
+certifi == 2019.6.16
+urllib3 == 1.25.3
 python_dateutil == 2.6.1
 setuptools == 21.0.0
 transitions == 0.6.4

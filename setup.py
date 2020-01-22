@@ -15,12 +15,12 @@
 #
 ##############################################################################
 
-import setuptools, os
+import setuptools
 
 
 REQUIRES=[
     'connexion == 1.1.15',
-    'certifi >= 2019.3.9',
+    'certifi == 2019.6.16',
     'python_dateutil == 2.6.1',
     'setuptools == 21.0.0',
     'transitions == 0.6.4',
@@ -29,6 +29,7 @@ REQUIRES=[
     'wsgiserver == 1.3',
     'autologging == 1.2.1',    
     'PyYAML == 5.1.0',
+    'urllib3 == 1.25.3'
 ]
 
 setuptools.setup(
@@ -37,6 +38,5 @@ setuptools.setup(
     package_data={'conf': ['*.ini']},
     include_package_data=True,
     install_requires=REQUIRES,
-    version=os.getenv('VERSION', '0.4.7')
-)
-
+    use_scm_version = {"root": "..", "relative_to": __file__},
+    setup_requires=['setuptools_scm'])

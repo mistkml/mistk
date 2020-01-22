@@ -15,7 +15,7 @@
 #
 ##############################################################################
 
-import setuptools
+import setuptools, os
 
 
 REQUIRES=[
@@ -38,5 +38,5 @@ setuptools.setup(
     package_data={'conf': ['*.ini']},
     include_package_data=True,
     install_requires=REQUIRES,
-    use_scm_version = {"root": "..", "relative_to": __file__},
-    setup_requires=['setuptools_scm'])
+    version=os.getenv('VERSION', '0.4.8')
+)

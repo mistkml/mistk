@@ -358,6 +358,20 @@ paths:
         500:
           description: "General server runtime exception"
       x-swagger-router-controller: "mistk.model.service"
+  /apiVersion:
+    get:
+      tags:
+      - "Model Instance Endpoint"
+      summary: "Returns the version of the MISTK API"
+      description: "Returns the version of the MISTK API"
+      operationId: "get_api_version"
+      parameters: []
+      responses:
+        200:
+          description: "The MISTK API Version.\n"
+        500:
+          description: "General server runtime exception"
+      x-swagger-router-controller: "mistk.model.service"
 definitions:
   MistkDataset:
     allOf:

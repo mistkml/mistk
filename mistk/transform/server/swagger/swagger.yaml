@@ -81,6 +81,20 @@ paths:
           schema:
             $ref: "#/definitions/ServiceError"
       x-swagger-router-controller: "mistk.transform.service"
+  /apiVersion:
+    get:
+      tags:
+      - "Transform Plugin Endpoint"
+      summary: "Returns the version of the MISTK API"
+      description: "Returns the version of the MISTK API"
+      operationId: "get_api_version"
+      parameters: []
+      responses:
+        200:
+          description: "The MISTK API Version\n"
+        500:
+          description: "General server runtime exception"
+      x-swagger-router-controller: "mistk.transform.service"
 definitions:
   TransformSpecificationInitParams:
     type: "object"

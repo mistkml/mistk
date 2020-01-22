@@ -20,6 +20,17 @@ def build_model(modelPath=None):  # noqa: E501
     return 'do some magic!'
 
 
+def get_api_version():  # noqa: E501
+    """Returns the version of the MISTK API
+
+    Returns the version of the MISTK API # noqa: E501
+
+
+    :rtype: None
+    """
+    return 'do some magic!'
+
+
 def get_status(watch=None, resourceVersion=None):  # noqa: E501
     """Get the status of the model
 

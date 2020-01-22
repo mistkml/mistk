@@ -14,6 +14,18 @@ from mistk.transform.server.test import BaseTestCase
 class TestTransformPluginEndpointController(BaseTestCase):
     """TransformPluginEndpointController integration test stubs"""
 
+    def test_get_api_version(self):
+        """Test case for get_api_version
+
+        Returns the version of the MISTK API
+        """
+        response = self.client.open(
+            '/v1/mistk/transform/apiVersion',
+            method='GET',
+            content_type='application/json')
+        self.assert200(response,
+                       'Response body is : ' + response.data.decode('utf-8'))
+
     def test_get_status(self):
         """Test case for get_status
 

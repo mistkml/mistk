@@ -7,6 +7,17 @@ from mistk.transform.server.models.transform_specification_init_params import Tr
 from mistk.transform.server import util
 
 
+def get_api_version():  # noqa: E501
+    """Returns the version of the MISTK API
+
+    Returns the version of the MISTK API # noqa: E501
+
+
+    :rtype: None
+    """
+    return 'do some magic!'
+
+
 def get_status(watch=None, resourceVersion=None):  # noqa: E501
     """Retrieves the status of the transform plugin
 

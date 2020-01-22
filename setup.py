@@ -29,7 +29,12 @@ REQUIRES=[
     'wsgiserver == 1.3',
     'autologging == 1.2.1',    
     'PyYAML == 5.1.0',
-    'urllib3 == 1.25.3'
+    'urllib3 == 1.25.3',
+    'six == 1.12.0',
+    'gevent == 1.4.0',
+    'bottle == 0.12.16',
+    'flask == 1.0.2'
+    
 ]
 
 setuptools.setup(

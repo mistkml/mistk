@@ -370,7 +370,8 @@ paths:
         '200':
           description: >
             The MISTK API Version.
-          type: string
+          schema:
+	    type: string
         '500':
           description: General server runtime exception
 

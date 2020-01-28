@@ -26,7 +26,7 @@ def get_api_version():  # noqa: E501
     Returns the version of the MISTK API # noqa: E501
 
 
-    :rtype: None
+    :rtype: str
     """
     return 'do some magic!'
 

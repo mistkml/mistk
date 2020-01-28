@@ -92,6 +92,8 @@ paths:
       responses:
         200:
           description: "The MISTK API Version\n"
+          schema:
+            type: "string"
         500:
           description: "General server runtime exception"
       x-swagger-router-controller: "mistk.transform.service"

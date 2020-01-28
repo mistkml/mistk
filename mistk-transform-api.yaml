@@ -94,7 +94,7 @@ paths:
           description: >
             The MISTK API Version
           schema:
-	    type: string
+            type: string
         '500':
           description: General server runtime exception
 

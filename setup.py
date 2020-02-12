@@ -19,9 +19,10 @@ import setuptools, os
 
 
 REQUIRES=[
+    'Werkzeug == 0.16.1', 
     'connexion == 1.1.15',
     'certifi == 2019.6.16',
-    'python_dateutil == 2.6.1',
+    'python-dateutil == 2.6.1',
     'setuptools == 21.0.0',
     'transitions == 0.6.4',
     'pypubsub == 4.0.0',

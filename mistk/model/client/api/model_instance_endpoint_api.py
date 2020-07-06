@@ -128,6 +128,97 @@ class ModelInstanceEndpointApi(object):
             _request_timeout=params.get('_request_timeout'),
             collection_formats=collection_formats)
 
+    def generate(self, **kwargs):  # noqa: E501
+        """Perform generations with the model  # noqa: E501
+
+        Perform generations with the model  # noqa: E501
+        This method makes a synchronous HTTP request by default. To make an
+        asynchronous HTTP request, please pass async=True
+        >>> thread = api.generate(async=True)
+        >>> result = thread.get()
+
+        :param async bool
+        :return: None
+                 If the method is called asynchronously,
+                 returns the request thread.
+        """
+        kwargs['_return_http_data_only'] = True
+        if kwargs.get('async'):
+            return self.generate_with_http_info(**kwargs)  # noqa: E501
+        else:
+            (data) = self.generate_with_http_info(**kwargs)  # noqa: E501
+            return data
+
+    def generate_with_http_info(self, **kwargs):  # noqa: E501
+        """Perform generations with the model  # noqa: E501
+
+        Perform generations with the model  # noqa: E501
+        This method makes a synchronous HTTP request by default. To make an
+        asynchronous HTTP request, please pass async=True
+        >>> thread = api.generate_with_http_info(async=True)
+        >>> result = thread.get()
+
+        :param async bool
+        :return: None
+                 If the method is called asynchronously,
+                 returns the request thread.
+        """
+
+        all_params = []  # noqa: E501
+        all_params.append('async')
+        all_params.append('_return_http_data_only')
+        all_params.append('_preload_content')
+        all_params.append('_request_timeout')
+
+        params = locals()
+        for key, val in six.iteritems(params['kwargs']):
+            if key not in all_params:
+                raise TypeError(
+                    "Got an unexpected keyword argument '%s'"
+                    " to method generate" % key
+                )
+            params[key] = val
+        del params['kwargs']
+
+        collection_formats = {}
+
+        path_params = {}
+
+        query_params = []
+
+        header_params = {}
+
+        form_params = []
+        local_var_files = {}
+
+        body_params = None
+        # HTTP header `Accept`
+        header_params['Accept'] = self.api_client.select_header_accept(
+            ['application/json'])  # noqa: E501
+
+        # HTTP header `Content-Type`
+        header_params['Content-Type'] = self.api_client.select_header_content_type(  # noqa: E501
+            ['application/json'])  # noqa: E501
+
+        # Authentication setting
+        auth_settings = []  # noqa: E501
+
+        return self.api_client.call_api(
+            '/generate', 'POST',
+            path_params,
+            query_params,
+            header_params,
+            body=body_params,
+            post_params=form_params,
+            files=local_var_files,
+            response_type=None,  # noqa: E501
+            auth_settings=auth_settings,
+            async=params.get('async'),
+            _return_http_data_only=params.get('_return_http_data_only'),
+            _preload_content=params.get('_preload_content', True),
+            _request_timeout=params.get('_request_timeout'),
+            collection_formats=collection_formats)
+
     def get_api_version(self, **kwargs):  # noqa: E501
         """Returns the version of the MISTK API  # noqa: E501
 
@@ -328,7 +419,7 @@ class ModelInstanceEndpointApi(object):
         >>> result = thread.get()
 
         :param async bool
-        :param ModelInstanceInitParams initialization_parameters: Initialization parameters for the model including the objectives, properties, and hparams. Objectives are a list of objectives for this model instance from the following options { train, predict}. Properties are a dictionary of properties for this model instance.  Hparams are a dictionary of hyperparameters for this model instance.  (required)
+        :param ModelInstanceInitParams initialization_parameters: Initialization parameters for the model including the objectives, properties, and hparams. Objectives are a list of objectives for this model instance from the following options  {train, predict, stream_predict, generate, transfer_learning}. Properties are a dictionary of properties for this model instance.  Hparams are a dictionary of hyperparameters for this model instance.  (required)
         :return: None
                  If the method is called asynchronously,
                  returns the request thread.
@@ -350,7 +441,7 @@ class ModelInstanceEndpointApi(object):
         >>> result = thread.get()
 
         :param async bool
-        :param ModelInstanceInitParams initialization_parameters: Initialization parameters for the model including the objectives, properties, and hparams. Objectives are a list of objectives for this model instance from the following options { train, predict}. Properties are a dictionary of properties for this model instance.  Hparams are a dictionary of hyperparameters for this model instance.  (required)
+        :param ModelInstanceInitParams initialization_parameters: Initialization parameters for the model including the objectives, properties, and hparams. Objectives are a list of objectives for this model instance from the following options  {train, predict, stream_predict, generate, transfer_learning}. Properties are a dictionary of properties for this model instance.  Hparams are a dictionary of hyperparameters for this model instance.  (required)
         :return: None
                  If the method is called asynchronously,
                  returns the request thread.
@@ -427,7 +518,7 @@ class ModelInstanceEndpointApi(object):
         >>> result = thread.get()
 
         :param async bool
-        :param object datasets: A dictionary mapping objectives to MistkDataset objects.  Dictionary keys must be one of the following {train, test}  (required)
+        :param object datasets: A dictionary mapping objectives to MistkDataset objects.  Dictionary keys must be one of the following {train, test, generate}  (required)
         :return: None
                  If the method is called asynchronously,
                  returns the request thread.
@@ -449,7 +540,7 @@ class ModelInstanceEndpointApi(object):
         >>> result = thread.get()
 
         :param async bool
-        :param object datasets: A dictionary mapping objectives to MistkDataset objects.  Dictionary keys must be one of the following {train, test}  (required)
+        :param object datasets: A dictionary mapping objectives to MistkDataset objects.  Dictionary keys must be one of the following {train, test, generate}  (required)
         :return: None
                  If the method is called asynchronously,
                  returns the request thread.
@@ -971,6 +1062,105 @@ class ModelInstanceEndpointApi(object):
             _request_timeout=params.get('_request_timeout'),
             collection_formats=collection_formats)
 
+    def save_generations(self, data_path, **kwargs):  # noqa: E501
+        """Save the generations made by the model  # noqa: E501
+
+        Instructs the container to save the generations to the specified path   # noqa: E501
+        This method makes a synchronous HTTP request by default. To make an
+        asynchronous HTTP request, please pass async=True
+        >>> thread = api.save_generations(data_path, async=True)
+        >>> result = thread.get()
+
+        :param async bool
+        :param str data_path: A path pointing to the directory where the generations are to be saved.  (required)
+        :return: None
+                 If the method is called asynchronously,
+                 returns the request thread.
+        """
+        kwargs['_return_http_data_only'] = True
+        if kwargs.get('async'):
+            return self.save_generations_with_http_info(data_path, **kwargs)  # noqa: E501
+        else:
+            (data) = self.save_generations_with_http_info(data_path, **kwargs)  # noqa: E501
+            return data
+
+    def save_generations_with_http_info(self, data_path, **kwargs):  # noqa: E501
+        """Save the generations made by the model  # noqa: E501
+
+        Instructs the container to save the generations to the specified path   # noqa: E501
+        This method makes a synchronous HTTP request by default. To make an
+        asynchronous HTTP request, please pass async=True
+        >>> thread = api.save_generations_with_http_info(data_path, async=True)
+        >>> result = thread.get()
+
+        :param async bool
+        :param str data_path: A path pointing to the directory where the generations are to be saved.  (required)
+        :return: None
+                 If the method is called asynchronously,
+                 returns the request thread.
+        """
+
+        all_params = ['data_path']  # noqa: E501
+        all_params.append('async')
+        all_params.append('_return_http_data_only')
+        all_params.append('_preload_content')
+        all_params.append('_request_timeout')
+
+        params = locals()
+        for key, val in six.iteritems(params['kwargs']):
+            if key not in all_params:
+                raise TypeError(
+                    "Got an unexpected keyword argument '%s'"
+                    " to method save_generations" % key
+                )
+            params[key] = val
+        del params['kwargs']
+        # verify the required parameter 'data_path' is set
+        if ('data_path' not in params or
+                params['data_path'] is None):
+            raise ValueError("Missing the required parameter `data_path` when calling `save_generations`")  # noqa: E501
+
+        collection_formats = {}
+
+        path_params = {}
+
+        query_params = []
+        if 'data_path' in params:
+            query_params.append(('dataPath', params['data_path']))  # noqa: E501
+
+        header_params = {}
+
+        form_params = []
+        local_var_files = {}
+
+        body_params = None
+        # HTTP header `Accept`
+        header_params['Accept'] = self.api_client.select_header_accept(
+            ['application/json'])  # noqa: E501
+
+        # HTTP header `Content-Type`
+        header_params['Content-Type'] = self.api_client.select_header_content_type(  # noqa: E501
+            ['application/json'])  # noqa: E501
+
+        # Authentication setting
+        auth_settings = []  # noqa: E501
+
+        return self.api_client.call_api(
+            '/saveGenerations', 'POST',
+            path_params,
+            query_params,
+            header_params,
+            body=body_params,
+            post_params=form_params,
+            files=local_var_files,
+            response_type=None,  # noqa: E501
+            auth_settings=auth_settings,
+            async=params.get('async'),
+            _return_http_data_only=params.get('_return_http_data_only'),
+            _preload_content=params.get('_preload_content', True),
+            _request_timeout=params.get('_request_timeout'),
+            collection_formats=collection_formats)
+
     def save_model(self, model_path, **kwargs):  # noqa: E501
         """Save the model snapshot  # noqa: E501
 
@@ -1071,7 +1261,7 @@ class ModelInstanceEndpointApi(object):
             collection_formats=collection_formats)
 
     def save_predictions(self, data_path, **kwargs):  # noqa: E501
-        """Save the model&#39;s predictions  # noqa: E501
+        """Save the predictions made by the model  # noqa: E501
 
         Instructs the container to save the predictions to the specified path   # noqa: E501
         This method makes a synchronous HTTP request by default. To make an
@@ -1093,7 +1283,7 @@ class ModelInstanceEndpointApi(object):
             return data
 
     def save_predictions_with_http_info(self, data_path, **kwargs):  # noqa: E501
-        """Save the model&#39;s predictions  # noqa: E501
+        """Save the predictions made by the model  # noqa: E501
 
         Instructs the container to save the predictions to the specified path   # noqa: E501
         This method makes a synchronous HTTP request by default. To make an

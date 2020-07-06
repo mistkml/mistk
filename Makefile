@@ -23,7 +23,7 @@ help:
 all: $(NAME) docs dist
 
 clean: ## Remove all build artifacts
-	rm -rf gen $(NAME)/model/server $(NAME)/model/client $(NAME)/transform/server $(NAME)/transform/client
+	rm -rf gen $(NAME)/model/server $(NAME)/model/client $(NAME)/transform/server $(NAME)/transform/client $(NAME)/evaluation/server $(NAME)/evaluation/client
 	rm -rf build test-harness/build docs dist *.egg-info test-harness/*.egg-info sphinx_docs
 	find . -name __pycache__ -exec rm -rf {} \;
 
@@ -35,10 +35,14 @@ gen/$(NAME)/transform_server: mistk-transform-api.yaml
 	rm -rf gen/$(NAME)/transform_server
 	$(CODEGEN) generate -l python-flask -o $(OUTPUT_BASE_DIR)/gen/$(NAME)/transform_server -i $(OUTPUT_BASE_DIR)/mistk-transform-api.yaml -D packageName=$(NAME).transform.server
 
-gen:: gen/$(NAME)_server gen/$(NAME)/transform_server
+gen/$(NAME)/evaluation_server: mistk-evaluation-api.yaml
+	rm -rf gen/$(NAME)/evaluation_server
+	$(CODEGEN) generate -l python-flask -o $(OUTPUT_BASE_DIR)/gen/$(NAME)/evaluation_server -i $(OUTPUT_BASE_DIR)/mistk-evaluation-api.yaml -D packageName=$(NAME).evaluation.server
+
+gen:: gen/$(NAME)_server gen/$(NAME)/transform_server gen/$(NAME)/evaluation_server
 
 
-$(NAME)/server: gen/$(NAME)/model_server gen/$(NAME)/transform_server ## Generate the server implementation from the swagger spec
+$(NAME)/server: gen/$(NAME)/model_server gen/$(NAME)/transform_server gen/$(NAME)/evaluation_server ## Generate the server implementation from the swagger spec
 	rm -rf $(NAME)/model/server
 	mkdir -p $(NAME)/model/server
 	cp -rv gen/$(NAME)/model_server/$(NAME).model.server/* $(NAME)/model/server
@@ -49,6 +53,12 @@ $(NAME)/server: gen/$(NAME)/model_server gen/$(NAME)/transform_server ## Generat
 	cp -rv gen/$(NAME)/transform_server/$(NAME).transform.server/* $(NAME)/transform/server
 	cp -rv gen/$(NAME)/transform_server/$(NAME)/transform/server/* $(NAME)/transform/server
 
+	rm -rf $(NAME)/evaluation/server
+	mkdir -p $(NAME)/evaluation/server
+	cp -rv gen/$(NAME)/evaluation_server/$(NAME).evaluation.server/* $(NAME)/evaluation/server
+	cp -rv gen/$(NAME)/evaluation_server/$(NAME)/evaluation/server/* $(NAME)/evaluation/server
+	
+
 gen/$(NAME)/model_client: mistk-model-api.yaml
 	rm -rf gen/$(NAME)/model_client
 	$(CODEGEN) generate -l python -o $(OUTPUT_BASE_DIR)/gen/$(NAME)/model_client -i $(OUTPUT_BASE_DIR)/mistk-model-api.yaml -D packageName=$(NAME).model.client
@@ -57,9 +67,13 @@ gen/$(NAME)/transform_client: mistk-transform-api.yaml
 	rm -rf gen/$(NAME)/transform_client
 	$(CODEGEN) generate -l python -o $(OUTPUT_BASE_DIR)/gen/$(NAME)/transform_client -i $(OUTPUT_BASE_DIR)/mistk-transform-api.yaml -D packageName=$(NAME).transform.client
 
-gen:: gen/$(NAME)/model_client gen/$(NAME)/transform_client
+gen/$(NAME)/evaluation_client: mistk-evaluation-api.yaml
+	rm -rf gen/$(NAME)/evaluation_client
+	$(CODEGEN) generate -l python -o $(OUTPUT_BASE_DIR)/gen/$(NAME)/evaluation_client -i $(OUTPUT_BASE_DIR)/mistk-evaluation-api.yaml -D packageName=$(NAME).evaluation.client
 
-$(NAME)/client: gen/$(NAME)/model_client gen/$(NAME)/transform_client ## Generate the client implementations from the swagger spec
+gen:: gen/$(NAME)/model_client gen/$(NAME)/transform_client gen/$(NAME)/evaluation_client
+
+$(NAME)/client: gen/$(NAME)/model_client gen/$(NAME)/transform_client gen/$(NAME)/evaluation_client ## Generate the client implementations from the swagger spec
 	rm -rf $(NAME)/model/client
 	mkdir -p $(NAME)/model/client
 	cp -rv gen/$(NAME)/model_client/$(NAME).model.client/* $(NAME)/model/client
@@ -70,12 +84,19 @@ $(NAME)/client: gen/$(NAME)/model_client gen/$(NAME)/transform_client ## Generat
 	cp -rv gen/$(NAME)/transform_client/mistk.transform.client/* mistk/transform/client
 	cp -rv gen/$(NAME)/transform_client/mistk/transform/client/* mistk/transform/client
 
+	rm -rf mistk/evaluation/client
+	mkdir -p mistk/evaluation/client
+	cp -rv gen/$(NAME)/evaluation_client/mistk.evaluation.client/* mistk/evaluation/client
+	cp -rv gen/$(NAME)/evaluation_client/mistk/evaluation/client/* mistk/evaluation/client
+	
+
 $(NAME): $(NAME)/server $(NAME)/client 
 
 dist: $(NAME) docs  $(shell find $(NAME)) test-harness $(shell find . -maxdepth 1 -type f) ## Create a python binary wheel distribution
 	rm -rf dist && mkdir dist
-	VERSION=$(VERSION) $(PYTHON) setup.py bdist_wheel -d dist/$(NAME)/
-	cd test-harness && VERSION=$(VERSION) $(PYTHON) setup.py bdist_wheel  -d ../dist/$(NAME)-test-harness/
+	export VERSION=$(VERSION)
+	$(PYTHON) setup.py bdist_wheel -d dist/$(NAME)/
+	cd test-harness && $(PYTHON) setup.py bdist_wheel  -d ../dist/$(NAME)-test-harness/
 
 install: dist ## Install the python library for the local user
 	$(PYTHON) -m pip install $(shell find dist -type f) --user
@@ -100,5 +121,5 @@ swagger_docs:
 	rm -rf docs
         $(CODEGEN) generate -l html -o $(OUTPUT_BASE_DIR)/docs/models -i $(OUTPUT_BASE_DIR)/mistk-model-api.yaml -D packageVersion=$(VERSION)
         $(CODEGEN) generate -l html -o $(OUTPUT_BASE_DIR)/docs/models -i $(OUTPUT_BASE_DIR)/mistk-transform-api.yaml -D packageVersion=$(VERSION)
-
+		$(CODEGEN) generate -l html -o $(OUTPUT_BASE_DIR)/docs/models -i $(OUTPUT_BASE_DIR)/mistk-evaluation-api.yaml -D packageVersion=$(VERSION)
 docs: sphinx_docs swagger_docs ## Generate all documentation

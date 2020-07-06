@@ -20,6 +20,17 @@ def build_model(modelPath=None):  # noqa: E501
     return 'do some magic!'
 
 
+def generate():  # noqa: E501
+    """Perform generations with the model
+
+    Perform generations with the model # noqa: E501
+
+
+    :rtype: None
+    """
+    return 'do some magic!'
+
+
 def get_api_version():  # noqa: E501
     """Returns the version of the MISTK API
 
@@ -51,7 +62,7 @@ def initialize_model(initializationParameters):  # noqa: E501
 
     Instructs the model instance to initialize. # noqa: E501
 
-    :param initializationParameters: Initialization parameters for the model including the objectives, properties, and hparams. Objectives are a list of objectives for this model instance from the following options { train, predict}. Properties are a dictionary of properties for this model instance.  Hparams are a dictionary of hyperparameters for this model instance. 
+    :param initializationParameters: Initialization parameters for the model including the objectives, properties, and hparams. Objectives are a list of objectives for this model instance from the following options  {train, predict, stream_predict, generate, transfer_learning}. Properties are a dictionary of properties for this model instance.  Hparams are a dictionary of hyperparameters for this model instance. 
     :type initializationParameters: dict | bytes
 
     :rtype: None
@@ -66,7 +77,7 @@ def load_data(datasets):  # noqa: E501
 
     Loads data onto a staging area for use by the model # noqa: E501
 
-    :param datasets: A dictionary mapping objectives to MistkDataset objects.  Dictionary keys must be one of the following {train, test} 
+    :param datasets: A dictionary mapping objectives to MistkDataset objects.  Dictionary keys must be one of the following {train, test, generate} 
     :type datasets: 
 
     :rtype: None
@@ -129,6 +140,19 @@ def resume_training():  # noqa: E501
     return 'do some magic!'
 
 
+def save_generations(dataPath):  # noqa: E501
+    """Save the generations made by the model
+
+    Instructs the container to save the generations to the specified path  # noqa: E501
+
+    :param dataPath: A path pointing to the directory where the generations are to be saved. 
+    :type dataPath: str
+
+    :rtype: None
+    """
+    return 'do some magic!'
+
+
 def save_model(modelPath):  # noqa: E501
     """Save the model snapshot
 
@@ -143,7 +167,7 @@ def save_model(modelPath):  # noqa: E501
 
 
 def save_predictions(dataPath):  # noqa: E501
-    """Save the model&#39;s predictions
+    """Save the predictions made by the model
 
     Instructs the container to save the predictions to the specified path  # noqa: E501
 

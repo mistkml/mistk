@@ -38,7 +38,7 @@ class ObjectInfo(object):
         'description': 'str',
         'summary': 'str',
         'owner': 'str',
-        'group': 'str',
+        'project': 'str',
         'public': 'bool',
         'labels': 'object',
         'resources': 'list[str]',
@@ -55,7 +55,7 @@ class ObjectInfo(object):
         'description': 'description',
         'summary': 'summary',
         'owner': 'owner',
-        'group': 'group',
+        'project': 'project',
         'public': 'public',
         'labels': 'labels',
         'resources': 'resources',
@@ -64,7 +64,7 @@ class ObjectInfo(object):
         'modification_time': 'modificationTime'
     }
 
-    def __init__(self, kind=None, id=None, name=None, display_name=None, description=None, summary=None, owner=None, group=None, public=None, labels=None, resources=None, resource_version=None, creation_time=None, modification_time=None):  # noqa: E501
+    def __init__(self, kind=None, id=None, name=None, display_name=None, description=None, summary=None, owner=None, project=None, public=None, labels=None, resources=None, resource_version=None, creation_time=None, modification_time=None):  # noqa: E501
         """ObjectInfo - a model defined in Swagger"""  # noqa: E501
 
         self._kind = None
@@ -74,7 +74,7 @@ class ObjectInfo(object):
         self._description = None
         self._summary = None
         self._owner = None
-        self._group = None
+        self._project = None
         self._public = None
         self._labels = None
         self._resources = None
@@ -97,8 +97,8 @@ class ObjectInfo(object):
             self.summary = summary
         if owner is not None:
             self.owner = owner
-        if group is not None:
-            self.group = group
+        if project is not None:
+            self.project = project
         if public is not None:
             self.public = public
         if labels is not None:
@@ -274,33 +274,33 @@ class ObjectInfo(object):
         self._owner = owner
 
     @property
-    def group(self):
-        """Gets the group of this ObjectInfo.  # noqa: E501
+    def project(self):
+        """Gets the project of this ObjectInfo.  # noqa: E501
 
-        The group for this object.   # noqa: E501
+        The project for this object (assuming the resource is project-scoped)   # noqa: E501
 
-        :return: The group of this ObjectInfo.  # noqa: E501
+        :return: The project of this ObjectInfo.  # noqa: E501
         :rtype: str
         """
-        return self._group
+        return self._project
 
-    @group.setter
-    def group(self, group):
-        """Sets the group of this ObjectInfo.
+    @project.setter
+    def project(self, project):
+        """Sets the project of this ObjectInfo.
 
-        The group for this object.   # noqa: E501
+        The project for this object (assuming the resource is project-scoped)   # noqa: E501
 
-        :param group: The group of this ObjectInfo.  # noqa: E501
+        :param project: The project of this ObjectInfo.  # noqa: E501
         :type: str
         """
 
-        self._group = group
+        self._project = project
 
     @property
     def public(self):
         """Gets the public of this ObjectInfo.  # noqa: E501
 
-        Boolean flag indicating whether this resource will be  accessible to members outside of the group   # noqa: E501
+        Boolean flag indicating whether this resource will be  accessible to members outside of the project   # noqa: E501
 
         :return: The public of this ObjectInfo.  # noqa: E501
         :rtype: bool
@@ -311,7 +311,7 @@ class ObjectInfo(object):
     def public(self, public):
         """Sets the public of this ObjectInfo.
 
-        Boolean flag indicating whether this resource will be  accessible to members outside of the group   # noqa: E501
+        Boolean flag indicating whether this resource will be  accessible to members outside of the project   # noqa: E501
 
         :param public: The public of this ObjectInfo.  # noqa: E501
         :type: bool

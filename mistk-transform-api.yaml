@@ -81,23 +81,22 @@ paths:
           schema:
             $ref: "#/definitions/ServiceError"
       x-swagger-router-controller: "mistk.transform.service"
-
   /apiVersion:
     get:
-      operationId: getApiVersion
-      x-swagger-router-controller: mistk.transform.service
-      summary: Returns the version of the MISTK API
-      description: Returns the version of the MISTK API
-      tags: [ Transform Plugin Endpoint ]
+      tags:
+      - "Transform Plugin Endpoint"
+      summary: "Returns the version of the MISTK API"
+      description: "Returns the version of the MISTK API"
+      operationId: "get_api_version"
+      parameters: []
       responses:
-        '200':
-          description: >
-            The MISTK API Version
+        200:
+          description: "The MISTK API Version\n"
           schema:
-            type: string
-        '500':
-          description: General server runtime exception
-
+            type: "string"
+        500:
+          description: "General server runtime exception"
+      x-swagger-router-controller: "mistk.transform.service"
 definitions:
   TransformSpecificationInitParams:
     type: "object"
@@ -171,6 +170,7 @@ definitions:
         displayName: "displayName"
         resourceVersion: 0
         description: "description"
+        project: "project"
         resources:
         - "resources"
         - "resources"
@@ -179,7 +179,6 @@ definitions:
         modificationTime: "2000-01-23T04:56:07.000+00:00"
         name: "name"
         id: "046b6c7f-0b8a-43b9-b35d-6489e6daee91"
-        group: "group"
   ObjectInfo:
     type: "object"
     properties:
@@ -214,13 +213,13 @@ definitions:
       owner:
         type: "string"
         description: "The owner/creator of this object.\n"
-      group:
+      project:
         type: "string"
-        description: "The group for this object.\n"
+        description: "The project for this object (assuming the resource is project-scoped)\n"
       public:
         type: "boolean"
         description: "Boolean flag indicating whether this resource will be  accessible\
-          \ to members outside of the group\n"
+          \ to members outside of the project\n"
       labels:
         type: "object"
         description: "Key-value pairs of annotations associate with the object.\n"
@@ -256,6 +255,7 @@ definitions:
       displayName: "displayName"
       resourceVersion: 0
       description: "description"
+      project: "project"
       resources:
       - "resources"
       - "resources"
@@ -264,7 +264,6 @@ definitions:
       modificationTime: "2000-01-23T04:56:07.000+00:00"
       name: "name"
       id: "046b6c7f-0b8a-43b9-b35d-6489e6daee91"
-      group: "group"
   MistkDataset:
     allOf:
     - $ref: "#/definitions/Dataset"
@@ -312,6 +311,15 @@ definitions:
         $ref: "#/definitions/ObjectReference"
     description: "Defines the location within the data lake where a dataset can be\
       \ found. It is linked to a DatasetClass\n"
+    x-sml-resource: "Dataset"
+    x-sml-verbs:
+    - "create"
+    - "read"
+    - "update"
+    - "delete"
+    - "list"
+    - "export"
+    x-sml-scope: "project"
   DatasetStatistics:
     type: "object"
     properties:
@@ -327,9 +335,9 @@ definitions:
         type: "string"
         description: "The type of the object being referenced. This is often optional\
           \ as it will be inferrred by the context.\n"
-      group:
+      project:
         type: "string"
-        description: "The group (namespace) of this object.\n"
+        description: "The project (namespace) of this object.\n"
       id:
         type: "string"
         format: "uuid"

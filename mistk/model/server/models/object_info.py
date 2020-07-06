@@ -15,7 +15,7 @@ class ObjectInfo(Model):
     Do not edit the class manually.
     """
 
-    def __init__(self, kind: str=None, id: str=None, name: str=None, display_name: str=None, description: str=None, summary: str=None, owner: str=None, group: str=None, public: bool=None, labels: object=None, resources: List[str]=None, resource_version: int=None, creation_time: datetime=None, modification_time: datetime=None):  # noqa: E501
+    def __init__(self, kind: str=None, id: str=None, name: str=None, display_name: str=None, description: str=None, summary: str=None, owner: str=None, project: str=None, public: bool=None, labels: object=None, resources: List[str]=None, resource_version: int=None, creation_time: datetime=None, modification_time: datetime=None):  # noqa: E501
         """ObjectInfo - a model defined in Swagger
 
         :param kind: The kind of this ObjectInfo.  # noqa: E501
@@ -32,8 +32,8 @@ class ObjectInfo(Model):
         :type summary: str
         :param owner: The owner of this ObjectInfo.  # noqa: E501
         :type owner: str
-        :param group: The group of this ObjectInfo.  # noqa: E501
-        :type group: str
+        :param project: The project of this ObjectInfo.  # noqa: E501
+        :type project: str
         :param public: The public of this ObjectInfo.  # noqa: E501
         :type public: bool
         :param labels: The labels of this ObjectInfo.  # noqa: E501
@@ -55,7 +55,7 @@ class ObjectInfo(Model):
             'description': str,
             'summary': str,
             'owner': str,
-            'group': str,
+            'project': str,
             'public': bool,
             'labels': object,
             'resources': List[str],
@@ -72,7 +72,7 @@ class ObjectInfo(Model):
             'description': 'description',
             'summary': 'summary',
             'owner': 'owner',
-            'group': 'group',
+            'project': 'project',
             'public': 'public',
             'labels': 'labels',
             'resources': 'resources',
@@ -88,7 +88,7 @@ class ObjectInfo(Model):
         self._description = description
         self._summary = summary
         self._owner = owner
-        self._group = group
+        self._project = project
         self._public = public
         self._labels = labels
         self._resources = resources
@@ -269,33 +269,33 @@ class ObjectInfo(Model):
         self._owner = owner
 
     @property
-    def group(self) -> str:
-        """Gets the group of this ObjectInfo.
+    def project(self) -> str:
+        """Gets the project of this ObjectInfo.
 
-        The group for this object.   # noqa: E501
+        The project for this object (assuming the resource is project-scoped)   # noqa: E501
 
-        :return: The group of this ObjectInfo.
+        :return: The project of this ObjectInfo.
         :rtype: str
         """
-        return self._group
+        return self._project
 
-    @group.setter
-    def group(self, group: str):
-        """Sets the group of this ObjectInfo.
+    @project.setter
+    def project(self, project: str):
+        """Sets the project of this ObjectInfo.
 
-        The group for this object.   # noqa: E501
+        The project for this object (assuming the resource is project-scoped)   # noqa: E501
 
-        :param group: The group of this ObjectInfo.
-        :type group: str
+        :param project: The project of this ObjectInfo.
+        :type project: str
         """
 
-        self._group = group
+        self._project = project
 
     @property
     def public(self) -> bool:
         """Gets the public of this ObjectInfo.
 
-        Boolean flag indicating whether this resource will be  accessible to members outside of the group   # noqa: E501
+        Boolean flag indicating whether this resource will be  accessible to members outside of the project   # noqa: E501
 
         :return: The public of this ObjectInfo.
         :rtype: bool
@@ -306,7 +306,7 @@ class ObjectInfo(Model):
     def public(self, public: bool):
         """Sets the public of this ObjectInfo.
 
-        Boolean flag indicating whether this resource will be  accessible to members outside of the group   # noqa: E501
+        Boolean flag indicating whether this resource will be  accessible to members outside of the project   # noqa: E501
 
         :param public: The public of this ObjectInfo.
         :type public: bool

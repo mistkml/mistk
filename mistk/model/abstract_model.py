@@ -27,8 +27,8 @@ import sys
 # The model states
 _model_states = {'started', 'initializing', 'initialized', 'failed', 'loading_data',
                  'building_model', 'ready', 'pausing', 'paused', 'unpausing', 'training', 
-                 'predicting', 'saving_model', 'saving_predictions', 'terminating', 'terminated', 
-                 'resetting'}
+                 'predicting', 'generating', 'saving_model', 'saving_predictions', 'saving_generations',
+                 'terminating', 'terminated', 'resetting'}
 
 class AbstractModel (metaclass=ABCMeta):
     """
@@ -60,6 +60,8 @@ class AbstractModel (metaclass=ABCMeta):
         self._machine.add_transition(trigger='predict', source='ready', dest='predicting', after='_do_predict')
         self._machine.add_transition(trigger='stream_predict', source='ready', dest='predicting', after='_do_stream_predict')
         self._machine.add_transition(trigger='save_predictions', source='ready', dest='saving_predictions', after='_do_save_predictions')
+        self._machine.add_transition(trigger='generate', source='ready', dest='generating', after='_do_generate')
+        self._machine.add_transition(trigger='save_generations', source='ready', dest='saving_generations', after='_do_save_generations')
         self._machine.add_transition(trigger='terminate', source=list(_model_states-{'terminating', 'terminated', 'failed'}), dest='terminating', after='_do_terminate')
         self._machine.add_transition(trigger='terminated', source='terminating', dest='terminated')
         self._machine.add_transition(trigger='reset', source=list(_model_states-{'terminating', 'terminated'}), dest='resetting', after='_do_reset')        
@@ -151,7 +153,7 @@ class AbstractModel (metaclass=ABCMeta):
         This method should not be implemented or overwritten by subclasses.  It will be 
         created by the state machine.
         
-        :param dataset_map: A dictionary that maps string keys {training_data, test_data} to a
+        :param dataset_map: A dictionary that maps string keys {train, test, generation} to a
             Dataset object that contains information on the dataset to load
         """
         pass
@@ -260,6 +262,29 @@ class AbstractModel (metaclass=ABCMeta):
             file system or on the distributed file system 
         """
         pass
+    
+    def generate(self):
+        """
+        Triggers the model to enter the generating state.  A subsequent call to
+        do_generate with the given parameters will be made as a result.
+
+        This method should not be implemented or overwritten by subclasses.  It will be 
+        created by the state machine.
+        """
+        pass
+    
+    def save_generations(self, dataPath):
+        """
+        Triggers the model to enter the saving_generations state.  A subsequent call to
+        do_save_generations with the given parameters will be made as a result.
+
+        This method should not be implemented or overwritten by subclasses.  It will be 
+        created by the state machine.
+        
+        :param dataPath: The file path to where the model generations will be saved. This can be the local
+            file system or on the distributed file system 
+        """
+        pass
 
     def report_failure(self, reason):
         """
@@ -289,7 +314,7 @@ class AbstractModel (metaclass=ABCMeta):
         Called once the endpoint service has launched.  This would typically be the first call made to the service. 
         
         :param objectives: The objectives for the model. Possible values include 'training', 'prediction', 
-            'streaming_prediction', and 'transfer_learning'.
+            'streaming_prediction', 'generation', and 'transfer_learning'.
         :param props: A dictionary that is parsed from a JSON string. These are settings that are passed from the ecosystem, 
             but are not really considered hyperparameters.  They are not used by the model, but rather the endpoint itself 
             (e.g., where should heartbeats be sent and how often, etc).
@@ -311,7 +336,7 @@ class AbstractModel (metaclass=ABCMeta):
         Called once the endpoint service has launched.  This would typically be the first call made to the service. 
         
         :param objective: The objectives for the model. Possible values include 'training', 'prediction', 
-            'streaming_prediction', and 'transfer_learning'.
+            'streaming_prediction', 'generation', and 'transfer_learning'.
         :param props: A dictionary that is parsed from a JSON string. These are settings that are passed from the ecosystem, 
             but are not really considered hyperparameters.  They are not used by the model, but rather the endpoint itself 
             (e.g., where should heartbeats be sent and how often, etc).
@@ -323,7 +348,7 @@ class AbstractModel (metaclass=ABCMeta):
         """
         Instructs the container to load data (or at least record in memory where the data is, if it’s actually to be loaded during training).
         
-        :param dataset_map: A dictionary that maps string keys {training_data, test_data} to a
+        :param dataset_map: A dictionary that maps string keys {train, test, generation} to a
             Dataset object that contains information on the dataset to load
         """
         try:
@@ -341,7 +366,7 @@ class AbstractModel (metaclass=ABCMeta):
         """
         Instructs the container to load data (or at least record in memory where the data is, if it’s actually to be loaded during training).
         
-        :param dataset_map: A dictionary that maps string keys {training_data, test_data} to a
+        :param dataset_map: A dictionary that maps string keys {train, test, generation} to a
             Dataset object that contains information on the dataset to load
         """
         pass
@@ -529,6 +554,49 @@ class AbstractModel (metaclass=ABCMeta):
         
         :param dataPath: The location on the local file system or distributed 
             file system where the predictions will be saved
+        """
+        pass
+    
+    def _do_generate(self):
+        """
+        Executes/resumes the generation activity
+        """
+        try:
+            self.do_generate()
+            self.ready()
+        except Exception as ex: #pylint: disable=broad-except
+            logger.exception("Error running do_generate")
+            self.fail(str(ex))
+            
+    @abstractmethod
+    def do_generate(self):
+        """
+        Executes/resumes the generate activity
+        This operation is currently not supported. 
+        """
+        pass
+    
+    def _do_save_generations(self, dataPath):
+        """
+        Saves the current generations to the location specified
+        
+        :param dataPath: The location on the local file system or distributed 
+            file system where the generations will be saved
+        """
+        try:
+            self.do_save_predictions(dataPath)
+            self.ready()
+        except Exception as ex:  #pylint: disable=broad-except
+            logger.exception("Error running do_save_generations")
+            self.fail(str(ex))
+            
+    @abstractmethod
+    def do_save_generations(self, dataPath):
+        """
+        Saves the current generations to the location specified
+        
+        :param dataPath: The location on the local file system or distributed 
+            file system where the generations will be saved
         """
         pass
     

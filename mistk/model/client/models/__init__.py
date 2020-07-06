@@ -15,16 +15,19 @@
 from __future__ import absolute_import
 
 # import models into model package
+from mistk.model.client.models.data_record import DataRecord
 from mistk.model.client.models.dataset import Dataset
 from mistk.model.client.models.dataset_statistics import DatasetStatistics
 from mistk.model.client.models.metric import Metric
 from mistk.model.client.models.metric_data_parameters import MetricDataParameters
+from mistk.model.client.models.mistk_metric_list import MistkMetricList
 from mistk.model.client.models.model_instance_init_params import ModelInstanceInitParams
 from mistk.model.client.models.model_instance_status import ModelInstanceStatus
 from mistk.model.client.models.object_info import ObjectInfo
 from mistk.model.client.models.object_reference import ObjectReference
 from mistk.model.client.models.service_error import ServiceError
 from mistk.model.client.models.watch_event import WatchEvent
+from mistk.model.client.models.mistk_data_record import MistkDataRecord
 from mistk.model.client.models.mistk_dataset import MistkDataset
 from mistk.model.client.models.mistk_metric import MistkMetric
 from mistk.model.client.models.mistk_watch_event import MistkWatchEvent

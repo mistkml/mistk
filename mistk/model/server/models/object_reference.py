@@ -15,13 +15,13 @@ class ObjectReference(Model):
     Do not edit the class manually.
     """
 
-    def __init__(self, kind: str=None, group: str=None, id: str=None, name: str=None, instance: object=None):  # noqa: E501
+    def __init__(self, kind: str=None, project: str=None, id: str=None, name: str=None, instance: object=None):  # noqa: E501
         """ObjectReference - a model defined in Swagger
 
         :param kind: The kind of this ObjectReference.  # noqa: E501
         :type kind: str
-        :param group: The group of this ObjectReference.  # noqa: E501
-        :type group: str
+        :param project: The project of this ObjectReference.  # noqa: E501
+        :type project: str
         :param id: The id of this ObjectReference.  # noqa: E501
         :type id: str
         :param name: The name of this ObjectReference.  # noqa: E501
@@ -31,7 +31,7 @@ class ObjectReference(Model):
         """
         self.swagger_types = {
             'kind': str,
-            'group': str,
+            'project': str,
             'id': str,
             'name': str,
             'instance': object
@@ -39,14 +39,14 @@ class ObjectReference(Model):
 
         self.attribute_map = {
             'kind': 'kind',
-            'group': 'group',
+            'project': 'project',
             'id': 'id',
             'name': 'name',
             'instance': 'instance'
         }
 
         self._kind = kind
-        self._group = group
+        self._project = project
         self._id = id
         self._name = name
         self._instance = instance
@@ -86,27 +86,27 @@ class ObjectReference(Model):
         self._kind = kind
 
     @property
-    def group(self) -> str:
-        """Gets the group of this ObjectReference.
+    def project(self) -> str:
+        """Gets the project of this ObjectReference.
 
-        The group (namespace) of this object.   # noqa: E501
+        The project (namespace) of this object.   # noqa: E501
 
-        :return: The group of this ObjectReference.
+        :return: The project of this ObjectReference.
         :rtype: str
         """
-        return self._group
+        return self._project
 
-    @group.setter
-    def group(self, group: str):
-        """Sets the group of this ObjectReference.
+    @project.setter
+    def project(self, project: str):
+        """Sets the project of this ObjectReference.
 
-        The group (namespace) of this object.   # noqa: E501
+        The project (namespace) of this object.   # noqa: E501
 
-        :param group: The group of this ObjectReference.
-        :type group: str
+        :param project: The project of this ObjectReference.
+        :type project: str
         """
 
-        self._group = group
+        self._project = project
 
     @property
     def id(self) -> str:

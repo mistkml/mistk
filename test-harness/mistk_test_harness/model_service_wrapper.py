@@ -116,6 +116,20 @@ class ModelServiceWrapper(object):
         :param data_path: The directory path in which to save the predictions file
         """
         self._mi_api.save_predictions(data_path=data_path)
+        
+    def generate(self):
+        """
+        Executes the model instance's generate method
+        """
+        self._mi_api.generate()
+        
+    def save_generations(self, data_path):
+        """
+        Executes the model instance's save_generations method
+        
+        :param data_path: The directory path in which to save the generations created by the model
+        """
+        self._mi_api.save_generations(data_path=data_path)
     
     def get_status(self):
         """

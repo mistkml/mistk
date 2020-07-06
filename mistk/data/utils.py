@@ -22,8 +22,20 @@ from connexion.apps.flask_app import FlaskJSONEncoder
 import six
 
 import mistk.data
-from mistk.model.server.models.object_info import ObjectInfo
-import json
+from mistk import logger
+import json, inspect
+import re
+
+NATIVE_TYPES_MAPPING = {
+    'int': int,
+    'long': int,
+    'float': float,
+    'str': str,
+    'bool': bool,
+    'date': datetime.date,
+    'datetime': datetime.datetime,
+    'object': object,
+}
 
 
 class PresumptiveJSONEncoder(FlaskJSONEncoder):
@@ -58,26 +70,52 @@ def deserialize_model(data, klass):
     :param klass: class literal.
     :return: model object.
     """
-    instance = klass()
+    if not klass.swagger_types:
+        # server object
+        instance = klass()
+        if not instance.swagger_types:
+            return data
+        attribute_map = instance.attribute_map
+        swagger_types = instance.swagger_types
+    else:
+        # client object
+        attribute_map = klass.attribute_map
+        swagger_types = klass.swagger_types
 
-    if not instance.swagger_types:
-        return data
-
-    for attr, attr_type in six.iteritems(instance.swagger_types):
+    kwargs = {}
+    for attr, attr_type in six.iteritems(swagger_types):
         if data is not None \
-                and instance.attribute_map[attr] in data \
+                and attribute_map[attr] in data \
                 and isinstance(data, (list, dict)):
-            value = data[instance.attribute_map[attr]]
-            setattr(instance, attr, _deserialize(value, attr_type))
+            value = data[attribute_map[attr]]
+            if type(attr_type) == str:
+                # client objects use strings
+                kwargs[attr] = _deserialize(value, attr_type, inspect.getmodule(klass))
+            else:
+                kwargs[attr] = _deserialize(value, attr_type)
+
+    instance = klass(**kwargs)
+
+    # TODO handle alternate module name
+    if isinstance(instance, mistk.data.ObjectReference):
+        if instance.instance and instance.kind:
+            assert hasattr(mistk.data, instance.kind), \
+            "ObjectReference has invalid kind value: " + instance.kind
+            klass2 = getattr(mistk.data, instance.kind)
+            instance.instance = deserialize_model(instance.instance, klass2)
+        elif instance.instance and not instance.kind:
+            msg = "Instance given in object reference but kind attribute not specified"
+            logger.error(msg + '\n%s' % instance)
+            raise RuntimeError(msg)
             
     if hasattr(instance, 'object_info'):
-        instance.object_info = instance.object_info or ObjectInfo()
-        instance.object_info.kind = instance.object_info.kind or klass.__name__
+        instance.object_info = instance.object_info or mistk.data.ObjectInfo()
+        instance.object_info.kind = klass.__name__
 
     return instance
             
 
-def _deserialize(data, klass):
+def _deserialize(data, klass, module=None):
     """
     Deserializes dict, list, str into an object.
 
@@ -88,6 +126,23 @@ def _deserialize(data, klass):
     """
     if data is None:
         return None
+    
+    if type(klass) == str:
+        if klass.startswith('list['):
+            sub_kls = re.match('list\[(.*)\]', klass).group(1)
+            return [_deserialize(sub_data, sub_kls)
+                    for sub_data in data]
+
+        if klass.startswith('dict('):
+            sub_kls = re.match('dict\(([^,]*), (.*)\)', klass).group(2)
+            return {k: _deserialize(v, sub_kls)
+                    for k, v in six.iteritems(data)}
+
+        # convert str to class
+        if klass in NATIVE_TYPES_MAPPING:
+            klass = NATIVE_TYPES_MAPPING[klass]
+        else:
+            klass = getattr(module, klass)
 
     if klass in six.integer_types or klass in (float, str, bool):
         return _deserialize_primitive(data, klass)

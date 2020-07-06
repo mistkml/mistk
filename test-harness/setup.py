@@ -15,7 +15,7 @@
 #
 ##############################################################################
 
-import setuptools, os
+import setuptools
 
 REQUIRES=[
     'pandas == 0.20.3',
@@ -32,5 +32,5 @@ setuptools.setup(
     packages=setuptools.find_packages(),
     package_data={'mistk_test_harness': ['*.json']},
     install_requires=REQUIRES,
-    version=os.environ.get('VERSION', '0.4.8')
-)
+    use_scm_version = {"root": "../..", "relative_to": __file__},
+    setup_requires=['setuptools_scm'])

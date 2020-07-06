@@ -23,9 +23,10 @@ paths:
         name: "initializationParameters"
         description: "Initialization parameters for the model including the objectives,\
           \ properties, and hparams. Objectives are a list of objectives for this\
-          \ model instance from the following options { train, predict}. Properties\
-          \ are a dictionary of properties for this model instance.  Hparams are a\
-          \ dictionary of hyperparameters for this model instance.\n"
+          \ model instance from the following options  {train, predict, stream_predict,\
+          \ generate, transfer_learning}. Properties are a dictionary of properties\
+          \ for this model instance.  Hparams are a dictionary of hyperparameters\
+          \ for this model instance.\n"
         required: true
         schema:
           $ref: "#/definitions/ModelInstanceInitParams"
@@ -52,7 +53,7 @@ paths:
       - in: "body"
         name: "datasets"
         description: "A dictionary mapping objectives to MistkDataset objects.  Dictionary\
-          \ keys must be one of the following {train, test}\n"
+          \ keys must be one of the following {train, test, generate}\n"
         required: true
         schema:
           type: "object"
@@ -69,6 +70,12 @@ paths:
                 kind: "MistkDataset"
               modality: "image"
               format: "image"
+            generate:
+              object_info:
+                name: "image_generation_dataset"
+                kind: "MistkDataset"
+              modality: "text"
+              format: "raw"
       responses:
         200:
           description: "Returns 200 if the task was successfully submitted."
@@ -208,7 +215,7 @@ paths:
     post:
       tags:
       - "Model Instance Endpoint"
-      summary: "Save the model's predictions"
+      summary: "Save the predictions made by the model"
       description: "Instructs the container to save the predictions to the specified\
         \ path\n"
       operationId: "save_predictions"
@@ -216,6 +223,53 @@ paths:
       - name: "dataPath"
         in: "query"
         description: "A path pointing to the directory where the predictions are to\
+          \ be saved.\n"
+        required: true
+        type: "string"
+      responses:
+        200:
+          description: "Returns 200 if the task was successfully submitted."
+        400:
+          description: "Returns 400 if there is a task running when called."
+          schema:
+            $ref: "#/definitions/ServiceError"
+        500:
+          description: "General server runtime exception"
+          schema:
+            $ref: "#/definitions/ServiceError"
+      x-swagger-router-controller: "mistk.model.service"
+  /generate:
+    post:
+      tags:
+      - "Model Instance Endpoint"
+      summary: "Perform generations with the model"
+      description: "Perform generations with the model"
+      operationId: "generate"
+      parameters: []
+      responses:
+        200:
+          description: "Returns 200 if the task was successfully submitted."
+        400:
+          description: "Returns 400 if there is a task running when called."
+          schema:
+            $ref: "#/definitions/ServiceError"
+        500:
+          description: "General server runtime exception"
+          schema:
+            $ref: "#/definitions/ServiceError"
+      x-swagger-router-controller: "mistk.model.service"
+  /saveGenerations:
+    post:
+      tags:
+      - "Model Instance Endpoint"
+      summary: "Save the generations made by the model"
+      description: "Instructs the container to save the generations to the specified\
+        \ path\n"
+      operationId: "save_generations"
+      parameters:
+      - name: "dataPath"
+        in: "query"
+        description: "A path pointing to the directory where the generations are to\
           \ be saved.\n"
         required: true
         type: "string"
@@ -385,6 +439,19 @@ definitions:
   MistkMetric:
     allOf:
     - $ref: "#/definitions/Metric"
+  MistkMetricList:
+    type: "object"
+    properties:
+      items:
+        type: "array"
+        items:
+          $ref: "#/definitions/MistkMetric"
+      continueToken:
+        type: "string"
+    description: "A list of Metrics."
+  MistkDataRecord:
+    allOf:
+    - $ref: "#/definitions/DataRecord"
   MistkWatchEvent:
     allOf:
     - $ref: "#/definitions/WatchEvent"
@@ -401,6 +468,7 @@ definitions:
           - "prediction"
           - "streaming_prediction"
           - "transfer_learning"
+          - "generation"
       modelProperties:
         type: "object"
         example:
@@ -468,8 +536,10 @@ definitions:
         - "paused"
         - "training"
         - "predicting"
+        - "generating"
         - "saving_model"
         - "saving_predictions"
+        - "saving_generations"
       payload:
         type: "object"
         description: "Additional arbitrary information relevant to the current state.\n"
@@ -487,6 +557,7 @@ definitions:
         displayName: "displayName"
         resourceVersion: 0
         description: "description"
+        project: "project"
         resources:
         - "resources"
         - "resources"
@@ -495,7 +566,6 @@ definitions:
         modificationTime: "2000-01-23T04:56:07.000+00:00"
         name: "name"
         id: "046b6c7f-0b8a-43b9-b35d-6489e6daee91"
-        group: "group"
   ObjectInfo:
     type: "object"
     properties:
@@ -530,13 +600,13 @@ definitions:
       owner:
         type: "string"
         description: "The owner/creator of this object.\n"
-      group:
+      project:
         type: "string"
-        description: "The group for this object.\n"
+        description: "The project for this object (assuming the resource is project-scoped)\n"
       public:
         type: "boolean"
         description: "Boolean flag indicating whether this resource will be  accessible\
-          \ to members outside of the group\n"
+          \ to members outside of the project\n"
       labels:
         type: "object"
         description: "Key-value pairs of annotations associate with the object.\n"
@@ -572,6 +642,7 @@ definitions:
       displayName: "displayName"
       resourceVersion: 0
       description: "description"
+      project: "project"
       resources:
       - "resources"
       - "resources"
@@ -580,7 +651,6 @@ definitions:
       modificationTime: "2000-01-23T04:56:07.000+00:00"
       name: "name"
       id: "046b6c7f-0b8a-43b9-b35d-6489e6daee91"
-      group: "group"
   Dataset:
     type: "object"
     required:
@@ -621,6 +691,15 @@ definitions:
         $ref: "#/definitions/ObjectReference"
     description: "Defines the location within the data lake where a dataset can be\
       \ found. It is linked to a DatasetClass\n"
+    x-sml-resource: "Dataset"
+    x-sml-verbs:
+    - "create"
+    - "read"
+    - "update"
+    - "delete"
+    - "list"
+    - "export"
+    x-sml-scope: "project"
   DatasetStatistics:
     type: "object"
     properties:
@@ -636,9 +715,9 @@ definitions:
         type: "string"
         description: "The type of the object being referenced. This is often optional\
           \ as it will be inferrred by the context.\n"
-      group:
+      project:
         type: "string"
-        description: "The group (namespace) of this object.\n"
+        description: "The project (namespace) of this object.\n"
       id:
         type: "string"
         format: "uuid"
@@ -661,6 +740,8 @@ definitions:
     properties:
       objectInfo:
         $ref: "#/definitions/ObjectInfo"
+      implementationReference:
+        $ref: "#/definitions/ObjectReference"
       package:
         type: "string"
         description: "The name of the package containing the implementation of this\
@@ -681,11 +762,19 @@ definitions:
         description: "The types of assessments this metric can be used for.\n"
         items:
           type: "string"
-      imageId:
+      version:
         type: "string"
-        description: "The docker image ID used by the metric instance \n"
+        description: "The version of this metric"
     description: "Evaluation criteria for measuring the performance of an algorithm’\
       s implementation.\n"
+    x-sml-resource: "Metric"
+    x-sml-verbs:
+    - "create"
+    - "read"
+    - "update"
+    - "delete"
+    - "list"
+    x-sml-scope: "project"
   MetricDataParameters:
     type: "object"
     properties:
@@ -706,6 +795,34 @@ definitions:
         description: "The arg name for prediction bounds"
     description: "The data parameters provides a mapping for data into the arguments\
       \ passed to the metric.  \n"
+  DataRecord:
+    type: "object"
+    required:
+    - "recordId"
+    - "referencedSetId"
+    properties:
+      recordId:
+        type: "string"
+        description: "The id of this record"
+      referenceSetProject:
+        type: "string"
+        format: "string"
+        description: "the project associated with the data record set\n"
+      referencedSetId:
+        type: "string"
+        format: "uuid"
+        description: "The UUID of the Data Record Set this record is associated with.\
+          \ This  should be the ObjectId of a GroundTruthSet or PredictionSet\n"
+      values:
+        type: "array"
+        description: "A list of labels, optionally this could be a list of dictionaries\
+          \ instead where  the dictionaries contain the ground truth label plus a\
+          \ bounding box, etc,  this could also include certainty assessments. \n"
+        items:
+          type: "object"
+          properties: {}
+    description: "A record of values associated with a GroundTruthSet, PredictionSet,\
+      \ or EvaluationSet\n"
   WatchEvent:
     type: "object"
     required:

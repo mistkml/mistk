@@ -50,6 +50,9 @@ def config(component, file = cfg.get("CLUSTER", "mistk.log.config", DEFAULT_CFG_
     with open(file) as reader:
         log_config = json.load(reader)
     log_path = log_config['handlers']['file_handler']['filename']
+    if log_path.startswith("."):
+        base_dir = os.path.dirname(file)
+        log_path = os.path.join(base_dir, log_path)
     if os.getenv("HOSTNAME"):
         log_name = '%s_%s.log' % (component, os.getenv("HOSTNAME"))
     else:

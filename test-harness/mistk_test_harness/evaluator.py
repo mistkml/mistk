@@ -29,18 +29,24 @@ from sklearn.preprocessing import MultiLabelBinarizer
 import mistk.data.utils as utils
 from mistk.data import Metric
 
-def perform_assessment(eval_type, predictions_path, ground_truth_path):
+def perform_assessment(eval_type, eval_input_path, eval_input_format, ground_truth_path, evaluation_path):
     """
     Performs a metric's assessment using the predictions and ground truth files provided.
     Stored the assessment results as a JSON file in the predictions_path
     
     :param eval_type: The evaluation type. One of {'BinaryClassification', 
         'MultilabelClassification', 'MulticlassClassification', 'Regression'}
-    :param predictions_path: The directory path where the predictions.csv file is located
+    :param eval_input_path: Path to input data for the evaluation
+    :param eval_input_format: The format of the input data
     :param ground_truth_path: The directory path where the ground_truth.csv file is located
+    :param evaluation_path: A directory path to where all of the output files should be stored
     """
+    if eval_input_format not in "predictions":
+        msg = "EvaluationInputFormat %s is not supported by this Metric Evaluator, only 'predictions' are supported" % eval_input_format
+        logging.error(msg)
+        raise Exception(msg)
     # load prediction results
-    full_predictions_path = os.path.join(predictions_path, "predictions.csv")
+    full_predictions_path = os.path.join(eval_input_path, "predictions.csv")
     logging.info("Reading results from " + full_predictions_path)
     results_csv = []
     possible_cols = ['rowid', 'labels', 'confidence', 'bounds']
@@ -240,7 +246,7 @@ def perform_assessment(eval_type, predictions_path, ground_truth_path):
         logging.info("Completed metric " + str(counter + 1))
             
     eval_dict_json = json.dumps(eval_dict, indent=2) 
-    filename = predictions_path + "/eval_results_" + str(int(time.time())) + ".json"
+    filename = evaluation_path + "/eval_results_" + str(int(time.time())) + ".json"
     logging.info("Writing eval results to " + filename) 
     with open(filename, mode='w') as writer:
         writer.write(eval_dict_json)

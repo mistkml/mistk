@@ -101,7 +101,7 @@ class ModelInstanceStatus(object):
         :param state: The state of this ModelInstanceStatus.  # noqa: E501
         :type: str
         """
-        allowed_values = ["started", "initializing", "initialized", "failed", "loading_data", "building_model", "ready", "pausing", "paused", "training", "predicting", "saving_model", "saving_predictions"]  # noqa: E501
+        allowed_values = ["started", "initializing", "initialized", "failed", "loading_data", "building_model", "ready", "pausing", "paused", "training", "predicting", "generating", "saving_model", "saving_predictions", "saving_generations"]  # noqa: E501
         if state not in allowed_values:
             raise ValueError(
                 "Invalid value for `state` ({0}), must be one of {1}"  # noqa: E501

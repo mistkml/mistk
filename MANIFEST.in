@@ -1,2 +1,3 @@
 include mistk/model/server/**/*.yaml
 include mistk/transform/server/**/*.yaml
+include mistk/evaluation/server/**/*.yaml

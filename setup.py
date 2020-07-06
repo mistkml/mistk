@@ -15,11 +15,11 @@
 #
 ##############################################################################
 
-import setuptools, os
+import setuptools
 
 
 REQUIRES=[
-    'Werkzeug == 0.16.1', 
+    'Werkzeug == 0.16.1',
     'connexion == 1.1.15',
     'certifi == 2019.6.16',
     'python-dateutil == 2.6.1',
@@ -34,8 +34,8 @@ REQUIRES=[
     'six == 1.12.0',
     'gevent == 1.4.0',
     'bottle == 0.12.16',
-    'flask == 1.0.2'
-    
+    'flask == 1.0.2',
+    'csvvalidator == 1.2'
 ]
 
 setuptools.setup(
@@ -44,5 +44,5 @@ setuptools.setup(
     package_data={'conf': ['*.ini']},
     include_package_data=True,
     install_requires=REQUIRES,
-    version=os.getenv('VERSION', '0.4.8')
-)
+    use_scm_version = {"root": "..", "relative_to": __file__},
+    setup_requires=['setuptools_scm'])

@@ -28,6 +28,18 @@ class TestModelInstanceEndpointController(BaseTestCase):
         self.assert200(response,
                        'Response body is : ' + response.data.decode('utf-8'))
 
+    def test_generate(self):
+        """Test case for generate
+
+        Perform generations with the model
+        """
+        response = self.client.open(
+            '/v1/mistk/generate',
+            method='POST',
+            content_type='application/json')
+        self.assert200(response,
+                       'Response body is : ' + response.data.decode('utf-8'))
+
     def test_get_api_version(self):
         """Test case for get_api_version
 
@@ -45,7 +57,7 @@ class TestModelInstanceEndpointController(BaseTestCase):
 
         Get the status of the model
         """
-        query_string = [('watch', false),
+        query_string = [('watch', False),
                         ('resourceVersion', 56)]
         response = self.client.open(
             '/v1/mistk/status',
@@ -143,6 +155,20 @@ class TestModelInstanceEndpointController(BaseTestCase):
         self.assert200(response,
                        'Response body is : ' + response.data.decode('utf-8'))
 
+    def test_save_generations(self):
+        """Test case for save_generations
+
+        Save the generations made by the model
+        """
+        query_string = [('dataPath', 'dataPath_example')]
+        response = self.client.open(
+            '/v1/mistk/saveGenerations',
+            method='POST',
+            content_type='application/json',
+            query_string=query_string)
+        self.assert200(response,
+                       'Response body is : ' + response.data.decode('utf-8'))
+
     def test_save_model(self):
         """Test case for save_model
 
@@ -160,7 +186,7 @@ class TestModelInstanceEndpointController(BaseTestCase):
     def test_save_predictions(self):
         """Test case for save_predictions
 
-        Save the model's predictions
+        Save the predictions made by the model
         """
         query_string = [('dataPath', 'dataPath_example')]
         response = self.client.open(

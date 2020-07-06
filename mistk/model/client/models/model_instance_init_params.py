@@ -77,7 +77,7 @@ class ModelInstanceInitParams(object):
         :param objectives: The objectives of this ModelInstanceInitParams.  # noqa: E501
         :type: list[str]
         """
-        allowed_values = ["training", "prediction", "streaming_prediction", "transfer_learning"]  # noqa: E501
+        allowed_values = ["training", "prediction", "streaming_prediction", "transfer_learning", "generation"]  # noqa: E501
         if not set(objectives).issubset(set(allowed_values)):
             raise ValueError(
                 "Invalid values for `objectives` [{0}], must be a subset of [{1}]"  # noqa: E501

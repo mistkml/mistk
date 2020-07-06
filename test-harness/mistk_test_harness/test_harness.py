@@ -21,10 +21,14 @@ import time
 
 from mistk.model.abstract_model import AbstractModel
 from mistk.transform.abstract_transform_plugin import AbstractTransformPlugin
-from mistk.data import ModelInstanceInitParams, MistkDataset, ObjectInfo, TransformSpecificationInitParams
+from mistk.data import ModelInstanceInitParams, MistkDataset, ObjectInfo, TransformSpecificationInitParams, EvaluationSpecificationInitParams
 from mistk.model.service import ModelInstanceEndpoint
 from mistk.transform.service import TransformPluginEndpoint
-from mistk_test_harness import model_service_wrapper, transform_service_wrapper
+from mistk.evaluation.service import EvaluationPluginEndpoint
+from mistk_test_harness import model_service_wrapper, transform_service_wrapper, evaluation_service_wrapper
+from mistk.evaluation.abstract_evaluation_plugin import AbstractEvaluationPlugin
+from mistk.utils.csv_utils import validate_predictions_csv, validate_groundtruth_csv
+
 
 class TestHarness(object):
 
@@ -34,6 +38,7 @@ class TestHarness(object):
         """
         self._model_service = None
         self._transform_service = None
+        self._evaluation_service = None
         self._status_version = 0
 
     def model_init(self, model, objectives, dataset_map, model_path=None, model_props=None, hyperparams=None):
@@ -108,6 +113,8 @@ class TestHarness(object):
         if predictions_path:
             self._model_service.save_predictions(predictions_path)
             self.wait_for_state(self._model_service, 'save_predictions', 'ready')
+            if not validate_predictions_csv(predictions_path):
+                raise Exception("Failed to validate predictions csv file at %s" % predictions_path)
             
     def model_stream_predict(self, stream_input):
         """
@@ -120,12 +127,26 @@ class TestHarness(object):
         print('Stream prediction results:')
         print(predictions)
         
+    def model_generate(self, generations_path=None):
+        """
+        Call generate and, if generations_path is supplied, save_generationss on model.
+        Output model status.
+        
+        :param generations_path: The path to which the model's generations should be saved
+        """
+        self._model_service.generate()
+        self.wait_for_state(self._model_service, 'generate', 'ready')
+        
+        if generations_path:
+            self._model_service.save_generations(generations_path)
+            self.wait_for_state(self._model_service, 'save_generations', 'ready')
+        
     def wait_for_state(self, service, stage, state):
         """
         Waits for a model or transform service wrapper to change their 
         state to the desired state
         
-        :param service: The model or transform service to get status for
+        :param service: The model, transform, or evaluation service to get status for
         :param stage: The current stage of the container
         :param state: The desired state of the container        
         """
@@ -174,7 +195,13 @@ class TestHarness(object):
             self._transform_service.transform_plugin = transform_impl
             transform_impl.endpoint_service = self._transform_service
         
-        self.wait_for_state(self._transform_service, 'start', 'started')
+        st = self._transform_service.get_status().state
+        if  st == 'start':
+            self.wait_for_state(self._transform_service, 'start', 'started')
+        elif st == 'started' or st == 'ready':
+            pass
+        else:
+            assert False, ("Invalid state to start transform: %s" % st)
         
         mistk_input_dirs = []
         for input_dir in input_dirs:
@@ -188,3 +215,75 @@ class TestHarness(object):
         self._transform_service.transform(ip)
         
         self.wait_for_state(self._transform_service, 'transform', 'ready')
+        
+        
+    def evaluate(self, evaluation, assessment_type, metrics_names, input_data_path, evaluation_input_format, gt_path, evaluation_path, properties=None):
+        """
+        Creates a evaluation service wrapper and performs the metrics evaluation
+        on the dataset(s) provided.
+        
+        :param evaluation: The Evaluation that will be formed. Will be one of the following forms:
+            - URL of running transform instance (ie. http://localhost:8080)
+            - Python package and module (ie. mypackage.mymodule.MyEvaluationPluginClass
+        :param assessment_type: The evaluation type. One of {'BinaryClassification', 
+        'MultilabelClassification', 'MulticlassClassification', 'Regression'}
+        :param metric_names: Specific metrics to evaluate against instead of all metrics defined by assessment_type
+        :param input_data_path: Path to input data for the evaluation
+        :param evaluation_input_format: The format of the input data
+        :param ground_truth_path: The directory path where the ground_truth.csv file is located
+        :param evaluation_path: A directory path to where all of the output files should be stored
+        :param properties: A JSON dictionary of properties relevant to this evaluation
+        """
+        print('Evaluating...')
+        
+        # Validate the input ground truth and predictions csv file
+        if not validate_groundtruth_csv(gt_path):
+            msg = "Failed to validate ground truth csv file at %s" % gt_path
+            raise Exception(msg)
+        if "predictions" == evaluation_input_format and not validate_predictions_csv(input_data_path):
+            msg = "Failed to validate predictions csv file at %s" % input_data_path
+            raise Exception(msg)
+        
+        if evaluation.startswith('http:'):
+            self._evaluation_service = evaluation_service_wrapper.EvaluationServiceWrapper(os.path.join(evaluation, 'v1/mistk/evaluation'))
+        else:
+            self._evaluation_service = EvaluationPluginEndpoint()
+            path = evaluation.rsplit('.', 1)
+            module = importlib.import_module(path[0])
+            evaluation_impl = getattr(module, path[1])()
+            assert isinstance(evaluation_impl, AbstractEvaluationPlugin)
+            self._evaluation_service.evaluation_plugin = evaluation_impl
+            evaluation_impl.endpoint_service = self._evaluation_service
+            self._evaluation_service.load_metrics_spec(module)
+        
+        st = self._evaluation_service.get_status().state
+        if  st == 'start':
+            self.wait_for_state(self._evaluation_service, 'start', 'started')
+        elif st == 'started' or st == 'ready':
+            pass
+        else:
+            assert False, ("Invalid state to start evaluation: %s" % st)
+
+        all_metrics = self._evaluation_service.get_metrics()
+        metrics = []
+        # get all metrics for assessment type
+        if metrics_names is None:
+            for metric in all_metrics:
+                if assessment_type in metric.assessment_types:
+                    metrics.append(metric)
+        # get metrics by name for assessment type
+        else:
+            all_metric_names = []
+            for metric in all_metrics:
+                all_metric_names.append(metric.object_info.name)
+            for metric_name in metrics_names:
+                assert metric_name in all_metric_names, ("Invalid metric name: %s . No metric exists with this name." % metric_name)
+                metric = all_metrics[all_metric_names.index(metric_name)]
+                assert assessment_type in metric.assessment_types, ("Metric %s cannot be evaluated for assessment type %s" % (metric_name, assessment_type))      
+                metrics.append(metric)
+    
+        # evaluate for metrics
+        ip = EvaluationSpecificationInitParams(assessment_type, metrics, input_data_path, evaluation_input_format, gt_path, evaluation_path, properties)
+        self._evaluation_service.evaluate(ip)        
+
+        self.wait_for_state(self._evaluation_service, 'evaluate', 'ready')

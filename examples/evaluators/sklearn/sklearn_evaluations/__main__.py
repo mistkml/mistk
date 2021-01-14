@@ -1,1 +1,0 @@
-import mistk.evaluation.__main__

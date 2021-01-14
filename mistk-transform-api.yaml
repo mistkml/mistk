@@ -312,7 +312,7 @@ definitions:
     description: "Defines the location within the data lake where a dataset can be\
       \ found. It is linked to a DatasetClass\n"
     x-sml-resource: "Dataset"
-    x-smlclient-verbs:
+    x-sml-verbs:
     - "create"
     - "read"
     - "update"

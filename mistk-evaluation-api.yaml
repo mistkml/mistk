@@ -217,7 +217,7 @@ definitions:
     description: "Evaluation criteria for measuring the performance of an algorithm’\
       s implementation.\n"
     x-sml-resource: "Metric"
-    x-smlclient-verbs:
+    x-sml-verbs:
     - "create"
     - "read"
     - "update"

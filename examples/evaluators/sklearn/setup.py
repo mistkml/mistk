@@ -15,19 +15,23 @@
 #
 ##############################################################################
 
+
 from setuptools import setup, find_packages
 
+
 REQUIRES=[
-    'setuptools >= 21.0.0',
-    'pandas >= 0.20.3',
-    'scikit-learn >= 0.19.1',
-    'numpy >= 1.13.3',
-    'scipy >= 1.0.0',
+    'setuptools == 21.0.0',
+    'pandas == 0.20.3',
+    'numpy == 1.13.3',
+    'scikit-learn  == 0.19.1',
+    'SciPy == 1.1.0',
     'mistk'
 ]
 
 setup(
+    name='sklearn-evaluations',
     install_requires=REQUIRES,
-    name='scikit-basicmodels',
-    packages=find_packages()
+    packages=find_packages(),
+    package_data={'sklearn_evaluations': ['*.json']},
+    include_package_data=True
 )

@@ -378,6 +378,7 @@ class AbstractModel (metaclass=ABCMeta):
         :param path: The path to the model file
         """
         try:
+            if path=='None': path=None
             self.do_build_model(path)
             self._model_built = True            
             self.ready()

@@ -29,7 +29,7 @@ REQUIRES=[
     'rwlock == 0.0.7',
     'wsgiserver == 1.3',
     'autologging == 1.2.1',    
-    'PyYAML == 5.1.0',
+    'PyYAML == 5.4',
     'urllib3 == 1.25.3',
     'six == 1.12.0',
     'gevent == 1.4.0',

@@ -5,4 +5,4 @@ VERSION:=$(shell git describe --abbrev=0 --always --tags)
 PYTHON:=$(shell which python3.6)
 FULLNAME:=$(if $(FULLNAME),$(FULLNAME),$(NAME))
 
-DOCKER_REGISTRY:=registry.gitlab.us.lmco.com:443/sml/streamlinedml
+DOCKER_REGISTRY:=docker-registry:5000/sml/streamlinedml

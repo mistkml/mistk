@@ -100,7 +100,7 @@ class ModelInstanceEndpoint():
         
         :param module: THe name of the module
         """
-        return yaml.load(pkg_resources.ResourceManager().resource_stream('mistk', '/model/server/swagger/swagger.yaml'), Loader=yaml.FullLoader)
+        return yaml.load(pkg_resources.ResourceManager().resource_stream('mistk', '/model/server/swagger/swagger.yaml'), Loader=yaml.SafeLoader)
 
     @property
     def state_machine(self):
@@ -159,7 +159,9 @@ class ModelInstanceEndpoint():
                             "hparams": params.hyperparameters})
             logger.debug('Created initialize model task', extra={'model_task': task})
         except RuntimeError as inst:
-            return ServiceError(500, str(inst)), 500
+            msg = "Error during model initialization: %s" % str(inst)
+            logger.exception(msg)
+            return ServiceError(500, msg), 500
         
         self.add_task(task)
         
@@ -176,7 +178,9 @@ class ModelInstanceEndpoint():
                                         parameters = {"path": modelPath})
             self.add_task(task)
         except RuntimeError as inst:
-            return ServiceError(500, str(inst)), 500    
+            msg = "Error while building model: %s" % str(inst)
+            logger.exception(msg)
+            return ServiceError(500, msg), 500    
         
     def load_data(self, datasets):
         """
@@ -195,7 +199,9 @@ class ModelInstanceEndpoint():
                         parameters = {"dataset_map": datasets})
             self.add_task(task)
         except RuntimeError as inst:
-            return ServiceError(500, str(inst)), 500 
+            msg = "Error while loading data into model: %s" % str(inst)
+            logger.exception(msg)
+            return ServiceError(500, msg), 500 
 
     def train(self):
         """
@@ -207,7 +213,9 @@ class ModelInstanceEndpoint():
         try:
             self.add_task(ModelInstanceTask(operation="train"))
         except RuntimeError as inst:
-            return ServiceError(500, str(inst)), 500
+            msg = "Error while kicking off training activity: %s" % str(inst)
+            logger.exception(msg)
+            return ServiceError(500, msg), 500
         
     def save_model(self, modelPath):
         """
@@ -221,7 +229,9 @@ class ModelInstanceEndpoint():
                                     parameters = {"path": modelPath})
             self.add_task(task)
         except RuntimeError as inst:
-            return ServiceError(500, str(inst)), 500            
+            msg = "Error while saving model to path provided: %s" % str(inst)
+            logger.exception(msg)
+            return ServiceError(500, msg), 500            
         
     def predict(self):
         """
@@ -233,9 +243,11 @@ class ModelInstanceEndpoint():
         try:
             self.add_task(ModelInstanceTask(operation="predict"))
         except RuntimeError as inst:
-            return ServiceError(500, str(inst)), 500
+            msg = "Error while kicking off prediction activity: %s" % str(inst)
+            logger.exception(msg)
+            return ServiceError(500, msg), 500
         
-    def stream_predict(self, dataMap):
+    def stream_predict(self, dataMap, details=None):
         """
         Creates a Task which kicks off a stream prediction activity
         
@@ -244,11 +256,35 @@ class ModelInstanceEndpoint():
         """
         try:
             task = ModelInstanceTask(operation="stream_predict", 
-                                    parameters = {"data_map": dataMap})
+                                     parameters = {"data_map": dataMap,
+                                                  "details": details})
             self.add_task(task)
-            return self._get_response()
+            resp = self._get_response()
+            logger.debug('Stream predict response ready.')
+            # check if error from model queue response  
+            if isinstance(resp, ServiceError):
+                return resp, 500
+            else:
+                return resp
         except RuntimeError as inst:
-            return ServiceError(500, str(inst)), 500    
+            msg = "Error while kicking off stream prediction activity: %s" % str(inst)
+            logger.exception(msg)
+            return ServiceError(500, msg), 500
+
+    def update_stream_properties(self, props):
+        """
+        Creates a task for updating the streaming prediction properties.
+
+        :param props: Dictionary of metadata properties to be used by the model
+        """
+        try:
+            task = ModelInstanceTask(operation="update_stream_properties",
+                                     parameters={"props": props})
+            self.add_task(task)
+        except RuntimeError as inst:
+            msg = "Error while kicking off stream prediction activity: %s" % str(inst)
+            logger.exception(msg)
+            return ServiceError(500, msg), 500
         
     def save_predictions(self, dataPath):
         """
@@ -265,7 +301,40 @@ class ModelInstanceEndpoint():
 
             self.add_task(task)
         except RuntimeError as inst:
-            return ServiceError(500, str(inst)), 500             
+            msg = "Error while saving predictions generated by model on path specified: %s" % str(inst)
+            logger.exception(msg)
+            return ServiceError(500, msg), 500 
+
+    def generate(self):
+        """
+        Creates and returns a Task which kicks off a generation activity
+        
+        :return: The created Task object
+        """
+        logger.debug("Generate called")
+        try:
+            self.add_task(ModelInstanceTask(operation="generate"))
+        except RuntimeError as inst:
+            return ServiceError(500, str(inst)), 500
+    
+    def save_generations(self, dataPath):
+        """
+        Creates and returns a Task which saves the generations generated by a model
+        to the path specified
+        
+        :param dataPath: The location in which to save the model generations
+        :return: The created Task object
+        """
+        try:
+            task = ModelInstanceTask(
+                operation="save_generations",
+                parameters = {"dataPath": dataPath})
+
+            self.add_task(task)
+        except RuntimeError as inst:
+            msg = "Error while saving generations created by model on path specified: %s" % str(inst)
+            logger.exception(msg)
+            return ServiceError(500, msg), 500             
         
     def pause (self):
         """
@@ -296,12 +365,15 @@ class ModelInstanceEndpoint():
         try:
             self.add_task(ModelInstanceTask(operation="terminate"))
         except RuntimeError as inst:
-            return ServiceError(500, str(inst)), 500
+            msg = "Error while terminating the model: %s" % str(inst)
+            logger.exception(msg)
+            return ServiceError(500, msg), 500
     
     def reset(self):
         """
         Resets the model
         """
+        logger.debug("Reset called")
         try:
             def generate():
                 try:
@@ -310,7 +382,9 @@ class ModelInstanceEndpoint():
                     os.execv(sys.executable, ['python'] + sys.argv)
             return Response(generate(), mimetype='text/plain')
         except RuntimeError as inst:
-            return ServiceError(500, str(inst)), 500 
+            msg = "Error while resetting the model: %s" % str(inst)
+            logger.exception(msg)
+            return ServiceError(500, msg), 500 
             
     
     def get_status(self, watch=None, resourceVersion=None):
@@ -332,7 +406,9 @@ class ModelInstanceEndpoint():
                 else:         
                     return self._status
         except RuntimeError as inst:
-            return ServiceError(500, str(inst)), 500
+            msg = "Error while retrieving status for ModelEndpointService: %s" % str(inst)
+            logger.exception(msg)
+            return ServiceError(500, msg), 500
     
     def get_api_version(self):
         """
@@ -343,8 +419,8 @@ class ModelInstanceEndpoint():
         try:
             version = pkg_resources.require("mistk")[0].version
             return version, 200
-        except:
-            msg = 'Error occurred while attempting to retrieve MISTK API version'
+        except Exception as ex:
+            msg = 'Error occurred while attempting to retrieve MISTK API version: %s' % str(ex)
             logger.exception(msg)
             return ServiceError(500, msg), 500
         
@@ -371,11 +447,13 @@ class ModelInstanceEndpoint():
             task.status = 'queued'
             task.submitted = datetime.now()
             ops = ['initialize', 'load_data', 'build_model', 'train', 'pause', 
-                   'unpause', 'save_model', 'predict', 'save_predictions', 'stream_predict'] 
+                   'unpause', 'save_model', 'predict', 'save_predictions', 'stream_predict',
+                   'update_stream_properties', 'generate', 'save_generations'] 
              
             if not task.operation in ops:
-                return ServiceError(400, "Operation %s must be one of %s" % 
-                                (str(task.operation), str(ops))), 400
+                msg = "Operation %s must be one of %s" % (str(task.operation), str(ops))
+                logger.error(msg)
+                return ServiceError(400, msg), 400
          
             with self._task_lock.writer_lock:
                 if isinstance(self._current_task, ModelInstanceTask):
@@ -391,7 +469,9 @@ class ModelInstanceEndpoint():
             return task
         
         except RuntimeError as inst:
-            return ServiceError(500, str(inst)), 500
+            msg = "Error while adding task to ModelEndpointService and starting the task. %s" % str(inst)
+            logger.exception(msg)
+            return ServiceError(500, msg), 500
 
     def update_state(self, state=None, payload=None):
         """
@@ -408,7 +488,9 @@ class ModelInstanceEndpoint():
                 self._status = ModelInstanceStatus(info, state=state, payload=payload)
                 watch_manager.notify_watch('status', item=self._status)
         except RuntimeError as inst:
-            return ServiceError(500, str(inst)), 500
+            msg = "Error while updating state of the ModelEndpointService. %s" % str(inst)
+            logger.exception(msg)
+            return ServiceError(500, msg), 500
         
     def put_response(self, response):
         """

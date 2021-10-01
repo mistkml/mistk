@@ -106,7 +106,7 @@ class TransformPluginEndpoint():
         
         :param module: THe name of the module
         """
-        return yaml.load(pkg_resources.ResourceManager().resource_stream('mistk.transform', '/server/swagger/swagger.yaml'), Loader=yaml.FullLoader)         
+        return yaml.load(pkg_resources.ResourceManager().resource_stream('mistk.transform', '/server/swagger/swagger.yaml'), Loader=yaml.SafeLoader)
     
     @property
     def state_machine(self):
@@ -168,8 +168,9 @@ class TransformPluginEndpoint():
             ops = ['transform', 'terminate'] 
              
             if not task.operation in ops:
-                return ServiceError(400, "Operation %s must be one of %s" % 
-                                (str(task.operation), str(ops))), 400
+                msg = "Operation %s must be one of %s" % (str(task.operation), str(ops))
+                logger.error(msg)
+                return ServiceError(400, msg), 400
          
             with self._task_lock.writer_lock:
                 if isinstance(self._current_task, TransformPluginTask):
@@ -185,11 +186,13 @@ class TransformPluginEndpoint():
             return task
         
         except RuntimeError as inst:
-            return ServiceError(500, str(inst)), 500
+            msg = "Error while adding task to TransformPluginService and starting the task. %s" % str(inst)
+            logger.exception(msg)
+            return ServiceError(500, msg), 500
 
     def update_state(self, state=None, payload=None):
         """
-        Updates the state of the ModelEndpointService
+        Updates the state of the TransformPluginService
         
         :param state: The new state. If not given, the current state will be used.
         :param payload: Additional data to attach to the state
@@ -202,7 +205,9 @@ class TransformPluginEndpoint():
                 self._status = TransformInstanceStatus(info, state=state, payload=payload)
                 watch_manager.notify_watch('status', item=self._status)
         except RuntimeError as inst:
-            return ServiceError(500, str(inst)), 500
+            msg = "Error while updating state of the TransformPluginService. %s" % str(inst)
+            logger.exception(msg)
+            return ServiceError(500, msg), 500
                      
     def _process_task(self):
         """
@@ -238,7 +243,9 @@ class TransformPluginEndpoint():
                 else:         
                     return self._status
         except RuntimeError as inst:
-            return ServiceError(500, str(inst)), 500
+            msg = "Error while retrieving status for transform plugin. %s" % str(inst)
+            logger.exception(msg)
+            return ServiceError(500, msg), 500
         return 'do some magic!'
        
     
@@ -252,7 +259,9 @@ class TransformPluginEndpoint():
         try:
             self.add_task(TransformPluginTask(operation="terminate"))
         except RuntimeError as inst:
-            return ServiceError(500, str(inst)), 500
+            msg = "Error while terminating the transform plugin and cleaning up resources. %s" % str(inst)
+            logger.exception(msg)
+            return ServiceError(500, msg), 500
     
     
     def transform(self, initParams):  # noqa: E501
@@ -265,9 +274,6 @@ class TransformPluginEndpoint():
         :rtype: None
         """
         logger.debug("transform called")
-        if connexion.request.is_json:
-            initParams = TransformSpecificationInitParams.from_dict(connexion.request.get_json())  # noqa: E501
-        
         try:
             if not isinstance(initParams, TransformSpecificationInitParams) and cx.request.is_json:
                 initParams = mistk.data.utils.deserialize_model(cx.request.get_json(), TransformSpecificationInitParams)
@@ -278,7 +284,9 @@ class TransformPluginEndpoint():
                             "outputDir": initParams.output_dataset, 
                             "properties": initParams.properties})
         except RuntimeError as inst:
-            return ServiceError(500, str(inst)), 500
+            msg = "Error during transform. %s" % str(inst)
+            logger.exception(msg)
+            return ServiceError(500, msg), 500
         
         self.add_task(task)
         
@@ -291,8 +299,8 @@ class TransformPluginEndpoint():
         try:
             version = pkg_resources.require("mistk")[0].version
             return version, 200
-        except:
-            msg = 'Error occurred while attempting to retrieve MISTK API version'
+        except Exception as ex:
+            msg = 'Error occurred while attempting to retrieve MISTK API version: %s' % str(ex)
             logger.exception(msg)
             return ServiceError(500, msg), 500
     

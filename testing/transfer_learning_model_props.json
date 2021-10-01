@@ -1,0 +1,8 @@
+{
+    "number_labels": 120, 
+    "epochs": 1, 
+    "learning_rate": 0.1, 
+    "model_load_file": "densenet161-8d451a50.pth",
+    "arch": "densenet161"
+
+}

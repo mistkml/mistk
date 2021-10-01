@@ -20,15 +20,16 @@ from transitions import State
 
 from abc import ABCMeta, abstractmethod
 
+from mistk.data import ServiceError
 from mistk.model.service import ModelInstanceEndpoint
 from mistk import logger
 import sys
 
 # The model states
 _model_states = {'started', 'initializing', 'initialized', 'failed', 'loading_data',
-                 'building_model', 'ready', 'pausing', 'paused', 'unpausing', 'training', 
-                 'predicting', 'saving_model', 'saving_predictions', 'terminating', 'terminated', 
-                 'resetting'}
+                 'building_model', 'ready', 'pausing', 'paused', 'unpausing', 'training', 'updating_properties',
+                 'predicting', 'generating', 'saving_model', 'saving_predictions', 'saving_generations',
+                 'terminating', 'terminated', 'resetting'}
 
 class AbstractModel (metaclass=ABCMeta):
     """
@@ -50,7 +51,7 @@ class AbstractModel (metaclass=ABCMeta):
         self._machine.add_transition(trigger='initialized', source=['initializing', 'loading_data'], dest='initialized')
         self._machine.add_transition(trigger='load_data', source=['initialized', 'ready'], dest='loading_data', after='_do_load_data')
         self._machine.add_transition(trigger='build_model', source='initialized', dest='building_model', after='_do_build_model')
-        self._machine.add_transition(trigger='ready', source=['loading_data', 'building_model', 'training', 'predicting', 'saving_model', 'saving_predictions', 'resetting'], dest='ready')
+        self._machine.add_transition(trigger='ready', source=['loading_data', 'building_model', 'training', 'updating_properties', 'predicting', 'saving_model', 'saving_predictions', 'resetting'], dest='ready')
         self._machine.add_transition(trigger='train', source='ready', dest='training', after='_do_train')
         self._machine.add_transition(trigger='pause', source=['training', 'predicting'], dest='pausing', after='_do_pause')
         self._machine.add_transition(trigger='paused', source='pausing', dest='paused')
@@ -59,7 +60,10 @@ class AbstractModel (metaclass=ABCMeta):
         self._machine.add_transition(trigger='save_model', source=['ready', 'paused'], dest='saving_model', after='_do_save_model')
         self._machine.add_transition(trigger='predict', source='ready', dest='predicting', after='_do_predict')
         self._machine.add_transition(trigger='stream_predict', source='ready', dest='predicting', after='_do_stream_predict')
+        self._machine.add_transition(trigger='update_stream_properties', source='ready', dest='updating_properties', after='_do_update_stream_properties')
         self._machine.add_transition(trigger='save_predictions', source='ready', dest='saving_predictions', after='_do_save_predictions')
+        self._machine.add_transition(trigger='generate', source='ready', dest='generating', after='_do_generate')
+        self._machine.add_transition(trigger='save_generations', source='ready', dest='saving_generations', after='_do_save_generations')
         self._machine.add_transition(trigger='terminate', source=list(_model_states-{'terminating', 'terminated', 'failed'}), dest='terminating', after='_do_terminate')
         self._machine.add_transition(trigger='terminated', source='terminating', dest='terminated')
         self._machine.add_transition(trigger='reset', source=list(_model_states-{'terminating', 'terminated'}), dest='resetting', after='_do_reset')        
@@ -99,7 +103,7 @@ class AbstractModel (metaclass=ABCMeta):
         :param args: Optional non-keyworded variable length arguments to pass in
         :param kwargs: Optional keyworded variable length arguments to pass in
         """
-        logger.info("New state entered - %s {args: %s, kwargs: %s}", self.state, args, kwargs)
+        logger.debug("New state entered - %s {args: %s}", self.state, args)
         if self.state == 'failed' and len(args) > 0:
             self.endpoint_service.update_state(self.state, payload=args[0])
         else:
@@ -151,7 +155,7 @@ class AbstractModel (metaclass=ABCMeta):
         This method should not be implemented or overwritten by subclasses.  It will be 
         created by the state machine.
         
-        :param dataset_map: A dictionary that maps string keys {training_data, test_data} to a
+        :param dataset_map: A dictionary that maps string keys {train, test, generation} to a
             Dataset object that contains information on the dataset to load
         """
         pass
@@ -238,13 +242,28 @@ class AbstractModel (metaclass=ABCMeta):
         """
         pass
     
-    def stream_predict(self, data_map):
+    def stream_predict(self, data_map, details):
         """
         Triggers the model to enter the predicting state.  A subsequent call to
         do_stream_predict with the given parameters will be made as a result.
 
         This method should not be implemented or overwritten by subclasses.  It will be 
         created by the state machine.
+
+        :param data_map: A dictionary of ID keys to base64 encoded data
+        :param details: Optional parameter for the model to provide additional details
+        """
+        pass
+
+    def update_stream_properties(self, props):
+        """
+        Triggers the model to update the streaming properties.  A subsequent call to
+        do_update_stream_properties with the given parameters will be made as a result.
+
+        This method should not be implemented or overwritten by subclasses.  It will be 
+        created by the state machine.
+
+        :param props: A dictionary of metadata properties to be used by the model
         """
         pass
     
@@ -257,6 +276,29 @@ class AbstractModel (metaclass=ABCMeta):
         created by the state machine.
         
         :param dataPath: The file path to where the model predictions will be saved. This can be the local
+            file system or on the distributed file system 
+        """
+        pass
+    
+    def generate(self):
+        """
+        Triggers the model to enter the generating state.  A subsequent call to
+        do_generate with the given parameters will be made as a result.
+
+        This method should not be implemented or overwritten by subclasses.  It will be 
+        created by the state machine.
+        """
+        pass
+    
+    def save_generations(self, dataPath):
+        """
+        Triggers the model to enter the saving_generations state.  A subsequent call to
+        do_save_generations with the given parameters will be made as a result.
+
+        This method should not be implemented or overwritten by subclasses.  It will be 
+        created by the state machine.
+        
+        :param dataPath: The file path to where the model generations will be saved. This can be the local
             file system or on the distributed file system 
         """
         pass
@@ -289,7 +331,7 @@ class AbstractModel (metaclass=ABCMeta):
         Called once the endpoint service has launched.  This would typically be the first call made to the service. 
         
         :param objectives: The objectives for the model. Possible values include 'training', 'prediction', 
-            'streaming_prediction', and 'transfer_learning'.
+            'streaming_prediction', 'generation', and 'transfer_learning'.
         :param props: A dictionary that is parsed from a JSON string. These are settings that are passed from the ecosystem, 
             but are not really considered hyperparameters.  They are not used by the model, but rather the endpoint itself 
             (e.g., where should heartbeats be sent and how often, etc).
@@ -311,7 +353,7 @@ class AbstractModel (metaclass=ABCMeta):
         Called once the endpoint service has launched.  This would typically be the first call made to the service. 
         
         :param objective: The objectives for the model. Possible values include 'training', 'prediction', 
-            'streaming_prediction', and 'transfer_learning'.
+            'streaming_prediction', 'generation', and 'transfer_learning'.
         :param props: A dictionary that is parsed from a JSON string. These are settings that are passed from the ecosystem, 
             but are not really considered hyperparameters.  They are not used by the model, but rather the endpoint itself 
             (e.g., where should heartbeats be sent and how often, etc).
@@ -323,7 +365,7 @@ class AbstractModel (metaclass=ABCMeta):
         """
         Instructs the container to load data (or at least record in memory where the data is, if it’s actually to be loaded during training).
         
-        :param dataset_map: A dictionary that maps string keys {training_data, test_data} to a
+        :param dataset_map: A dictionary that maps string keys {train, test, generation} to a
             Dataset object that contains information on the dataset to load
         """
         try:
@@ -341,7 +383,7 @@ class AbstractModel (metaclass=ABCMeta):
         """
         Instructs the container to load data (or at least record in memory where the data is, if it’s actually to be loaded during training).
         
-        :param dataset_map: A dictionary that maps string keys {training_data, test_data} to a
+        :param dataset_map: A dictionary that maps string keys {train, test, generation} to a
             Dataset object that contains information on the dataset to load
         """
         pass
@@ -353,6 +395,7 @@ class AbstractModel (metaclass=ABCMeta):
         :param path: The path to the model file
         """
         try:
+            if path=='None': path=None
             self.do_build_model(path)
             self._model_built = True            
             self.ready()
@@ -489,22 +532,57 @@ class AbstractModel (metaclass=ABCMeta):
         """
         pass
     
-    def _do_stream_predict(self, data_map: dict):
+    def _do_stream_predict(self, data_map: dict, details: bool=False):
         """
-        Executes/resumes the stream prediction activity
+        Executes/resumes the stream prediction activity. 
+        Perform predictions on the input dict of id's to base64 encoded data and return a dict of id's
+        to predicted values. The underlying format of the base64 encoded data should be the native input 
+        format for the model.
+        
+        :param data_map: Dictionary for streaming data. Generally, the key would be the data id or file name and the 
+            value would be the base64 encoded data.
+        :param details: Optional parameter for the model to provide additional details (in Markdown or HTML) within 
+            the response dictionary under the key 'details'.
         """
         try:
-            response = self.do_stream_predict(data_map)
+            response = self.do_stream_predict(data_map, details)
             self.endpoint_service.put_response(response)
             self.ready()
         except Exception as ex: #pylint: disable=broad-except
             logger.exception("Error running do_stream_predict")
+            msg = "Unexpected error occurred while running stream predict: %s" % str(ex)
+            self.endpoint_service.put_response(ServiceError(500, msg))
             self.fail(str(ex))
-            
+    
     @abstractmethod
-    def do_stream_predict(self, data_map: dict):
+    def do_stream_predict(self, data_map: dict, details: bool=False):
         """
         Executes/resumes the prediction activity
+
+        :param data_map: A dictionary of ID keys to base64 encoded data
+        :param details: Optional parameter for the model to provide additional details
+        """
+        pass
+
+    def _do_update_stream_properties(self, props: dict):
+        """
+        Updates the stream prediction properties
+
+        :param props: A dictionary of streaming properties
+        """
+        try:
+            self.do_update_stream_properties(props)
+            self.ready()
+        except Exception as ex: #pylint: disable=broad-except
+            logger.exception("Error running do_update_stream_properties")
+            self.fail(str(ex))
+
+    #@abstractmethod
+    def do_update_stream_properties(self, props: dict):
+        """
+        Updates the stream prediction properties
+
+        :param props: A dictionary of streaming properties
         """
         pass
     
@@ -529,6 +607,49 @@ class AbstractModel (metaclass=ABCMeta):
         
         :param dataPath: The location on the local file system or distributed 
             file system where the predictions will be saved
+        """
+        pass
+    
+    def _do_generate(self):
+        """
+        Executes/resumes the generation activity
+        """
+        try:
+            self.do_generate()
+            self.ready()
+        except Exception as ex: #pylint: disable=broad-except
+            logger.exception("Error running do_generate")
+            self.fail(str(ex))
+            
+    @abstractmethod
+    def do_generate(self):
+        """
+        Executes/resumes the generate activity
+        This operation is currently not supported. 
+        """
+        pass
+    
+    def _do_save_generations(self, dataPath):
+        """
+        Saves the current generations to the location specified
+        
+        :param dataPath: The location on the local file system or distributed 
+            file system where the generations will be saved
+        """
+        try:
+            self.do_save_predictions(dataPath)
+            self.ready()
+        except Exception as ex:  #pylint: disable=broad-except
+            logger.exception("Error running do_save_generations")
+            self.fail(str(ex))
+            
+    @abstractmethod
+    def do_save_generations(self, dataPath):
+        """
+        Saves the current generations to the location specified
+        
+        :param dataPath: The location on the local file system or distributed 
+            file system where the generations will be saved
         """
         pass
     

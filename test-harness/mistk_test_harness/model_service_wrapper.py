@@ -108,6 +108,14 @@ class ModelServiceWrapper(object):
             base64 encoded data
         """
         return self._mi_api.stream_predict(data_map=data_map)
+    
+    def update_stream_properties(self, props):
+        """
+        Executes the model instance's update_stream_properties method
+
+        :param props: A dictionary of metadata properties to be used by the model
+        """
+        self._mi_api.update_stream_properties(props=props)
 
     def save_predictions(self, data_path):
         """
@@ -116,6 +124,20 @@ class ModelServiceWrapper(object):
         :param data_path: The directory path in which to save the predictions file
         """
         self._mi_api.save_predictions(data_path=data_path)
+        
+    def generate(self):
+        """
+        Executes the model instance's generate method
+        """
+        self._mi_api.generate()
+        
+    def save_generations(self, data_path):
+        """
+        Executes the model instance's save_generations method
+        
+        :param data_path: The directory path in which to save the generations created by the model
+        """
+        self._mi_api.save_generations(data_path=data_path)
     
     def get_status(self):
         """

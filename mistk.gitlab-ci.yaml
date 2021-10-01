@@ -1,0 +1,52 @@
+build-mistk:
+  stage: build-libs
+  dependencies: [builder-image, build-sml]
+  tags: [docker]
+  image: $CI_REGISTRY_IMAGE/builder:latest
+  script:
+    - bash
+    - (make -C smlcore sml-api.yaml && touch smlcore/sml-api.yaml) || echo "smlcore will need to be rebuilt"
+    - make -C mistk dist
+  rules:
+    - changes:
+      - mistk/*
+      - smlcore/*
+      when: always
+    - if: '$CI_COMMIT_BRANCH == "master" || $CI_COMMIT_BRANCH =~ /releases\/.*/'
+      when: always
+    - if: '$CI_MERGE_REQUEST_TARGET_BRANCH_NAME == "master"'
+      when: always
+    - if: '$CI_MERGE_REQUEST_LABELS =~ /autodeploy::[^,]*/'
+      when: always
+  artifacts:
+    paths:
+      - mistk/dist/
+    untracked: true
+
+test-mistk:
+  stage: test-libs
+  dependencies: [build-mistk]
+  tags: [docker]
+  image: $CI_REGISTRY_IMAGE/builder:latest
+  rules:
+    - changes:
+      - mistk/*
+      when: always
+  script:
+    - bash
+    - mkdir -p /tmp/model
+    - mkdir -p /tmp/train 
+    - ln -s /tmp/train/ /tmp/test
+    - wget http://yann.lecun.com/exdb/mnist/train-images-idx3-ubyte.gz -O /tmp/train/train-images-idx3-ubyte.gz
+    - wget http://yann.lecun.com/exdb/mnist/train-labels-idx1-ubyte.gz -O /tmp/train/train-labels-idx1-ubyte.gz
+    - wget http://yann.lecun.com/exdb/mnist/t10k-images-idx3-ubyte.gz -O /tmp/train/t10k-images-idx3-ubyte.gz
+    - wget http://yann.lecun.com/exdb/mnist/t10k-labels-idx1-ubyte.gz -O /tmp/train/t10k-labels-idx1-ubyte.gz
+    - cd mistk
+    - pip3 install -r requirements.txt
+    - export PYTHONPATH=$PWD:$PYTHONPATH
+    - export PYTHONPATH=$PWD/examples/models/logistic-regression:$PYTHONPATH
+    - export PYTHONPATH=$PWD/examples/transforms/groundtruth-mnist:$PYTHONPATH
+    - export PYTHONPATH=$PWD/examples/evaluators/sklearn:$PYTHONPATH
+    - export MISTK_CONFIG_FILE=$PWD/conf/mistk_config.ini
+    - cd test-harness
+    - python3 mistk_test_harness/test/TestHarnessTest.py 

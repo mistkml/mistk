@@ -106,7 +106,7 @@ class TransformPluginEndpoint():
         
         :param module: THe name of the module
         """
-        return yaml.load(pkg_resources.ResourceManager().resource_stream('mistk.transform', '/server/swagger/swagger.yaml'), Loader=yaml.FullLoader)         
+        return yaml.load(pkg_resources.ResourceManager().resource_stream('mistk.transform', '/server/swagger/swagger.yaml'), Loader=yaml.SafeLoader)
     
     @property
     def state_machine(self):

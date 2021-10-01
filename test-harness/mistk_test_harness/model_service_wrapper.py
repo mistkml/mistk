@@ -108,6 +108,14 @@ class ModelServiceWrapper(object):
             base64 encoded data
         """
         return self._mi_api.stream_predict(data_map=data_map)
+    
+    def update_stream_properties(self, props):
+        """
+        Executes the model instance's update_stream_properties method
+
+        :param props: A dictionary of metadata properties to be used by the model
+        """
+        self._mi_api.update_stream_properties(props=props)
 
     def save_predictions(self, data_path):
         """

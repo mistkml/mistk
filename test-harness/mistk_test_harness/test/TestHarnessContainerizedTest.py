@@ -91,7 +91,7 @@ class TestHarnessContainerizedTest(unittest.TestCase):
             self.harness.model_init(model, objectives, dataset_map, model_path=model_save_path)
     
             # test model
-            self.harness.model_predict(model_save_path)
+            self.harness.model_predict(model_save_path, model_save_path)
         finally:
             # stop model
             print('Stopping model_container')
@@ -160,7 +160,7 @@ class TestHarnessContainerizedTest(unittest.TestCase):
         
         try:
             # evaluate model
-            self.harness.evaluate(evaluation, assessment_type, None, model_data_path, model_data_path, model_data_path)
+            self.harness.evaluate(evaluation, assessment_type, None, model_data_path, model_data_path, 'predictions', model_data_path, model_data_path, model_data_path)
 
         finally:
             # stop evaluation
@@ -168,7 +168,7 @@ class TestHarnessContainerizedTest(unittest.TestCase):
             eval_container.stop()
             print('Container stopped')
        
-        eval_saved = glob.glob(model_data_path + '/eval_results_*.json')
+        eval_saved = glob.glob(model_data_path + '/eval*.json')
         self.assertTrue(eval_saved, "Metrics json file from evaluation was not saved to the folder %s" % model_data_path)
     
  

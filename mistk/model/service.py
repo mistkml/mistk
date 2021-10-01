@@ -100,7 +100,7 @@ class ModelInstanceEndpoint():
         
         :param module: THe name of the module
         """
-        return yaml.load(pkg_resources.ResourceManager().resource_stream('mistk', '/model/server/swagger/swagger.yaml'), Loader=yaml.FullLoader)
+        return yaml.load(pkg_resources.ResourceManager().resource_stream('mistk', '/model/server/swagger/swagger.yaml'), Loader=yaml.SafeLoader)
 
     @property
     def state_machine(self):
@@ -247,7 +247,7 @@ class ModelInstanceEndpoint():
             logger.exception(msg)
             return ServiceError(500, msg), 500
         
-    def stream_predict(self, dataMap):
+    def stream_predict(self, dataMap, details=None):
         """
         Creates a Task which kicks off a stream prediction activity
         
@@ -256,13 +256,35 @@ class ModelInstanceEndpoint():
         """
         try:
             task = ModelInstanceTask(operation="stream_predict", 
-                                    parameters = {"data_map": dataMap})
+                                     parameters = {"data_map": dataMap,
+                                                  "details": details})
             self.add_task(task)
-            return self._get_response()
+            resp = self._get_response()
+            logger.debug('Stream predict response ready.')
+            # check if error from model queue response  
+            if isinstance(resp, ServiceError):
+                return resp, 500
+            else:
+                return resp
         except RuntimeError as inst:
             msg = "Error while kicking off stream prediction activity: %s" % str(inst)
             logger.exception(msg)
-            return ServiceError(500, msg), 500    
+            return ServiceError(500, msg), 500
+
+    def update_stream_properties(self, props):
+        """
+        Creates a task for updating the streaming prediction properties.
+
+        :param props: Dictionary of metadata properties to be used by the model
+        """
+        try:
+            task = ModelInstanceTask(operation="update_stream_properties",
+                                     parameters={"props": props})
+            self.add_task(task)
+        except RuntimeError as inst:
+            msg = "Error while kicking off stream prediction activity: %s" % str(inst)
+            logger.exception(msg)
+            return ServiceError(500, msg), 500
         
     def save_predictions(self, dataPath):
         """
@@ -351,6 +373,7 @@ class ModelInstanceEndpoint():
         """
         Resets the model
         """
+        logger.debug("Reset called")
         try:
             def generate():
                 try:
@@ -425,7 +448,7 @@ class ModelInstanceEndpoint():
             task.submitted = datetime.now()
             ops = ['initialize', 'load_data', 'build_model', 'train', 'pause', 
                    'unpause', 'save_model', 'predict', 'save_predictions', 'stream_predict',
-                   'generate', 'save_generations'] 
+                   'update_stream_properties', 'generate', 'save_generations'] 
              
             if not task.operation in ops:
                 msg = "Operation %s must be one of %s" % (str(task.operation), str(ops))

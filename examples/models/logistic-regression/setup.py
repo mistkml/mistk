@@ -19,11 +19,17 @@
 from setuptools import setup, find_packages
 
 REQUIRES=[
+    'setuptools >= 21.0.0',
+    'pandas >= 0.20.3',
+    'scikit-learn >= 0.19.1',
+    'numpy >= 1.13.3',
+    'scipy >= 1.00',
     'mistk'
 ]
 
 setup(
     install_requires=REQUIRES,
     name='mnist-logistic-regression',
+    include_package_data=True,
     packages=find_packages()
 )

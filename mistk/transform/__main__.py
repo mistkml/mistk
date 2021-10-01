@@ -32,4 +32,8 @@ assert isinstance(_transform_plugin, AbstractTransformPlugin)
 _endpoint_service.transform_plugin = _transform_plugin
 _transform_plugin.endpoint_service = _endpoint_service
 
-_endpoint_service.start_server()
+try:
+    service_port = sys.argv[3]
+    _endpoint_service.start_server(port=int(service_port))
+except IndexError:
+    _endpoint_service.start_server() # defaults to 8080

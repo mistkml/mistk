@@ -10,6 +10,9 @@ docker-image:
     	--build-arg "no_proxy=$(no_proxy)" \
     	.
 
+docker-test: 
+	docker run -it --volume /tmp:/tmp --publish 8080:8080 sml-models/$(NAME)
+
 docker-tag: docker-image
 	docker tag sml-models/$(NAME) $(DOCKER_REGISTRY)/sml-models/$(NAME)
 	docker tag sml-models/$(NAME) $(DOCKER_REGISTRY)/sml-models/$(NAME):$(VERSION)

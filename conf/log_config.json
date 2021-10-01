@@ -34,13 +34,13 @@
     },
     "handlers": {
       "console":{
-        "level": "DEBUG",
+        "level": "INFO",
         "class": "logging.StreamHandler",
         "formatter": "single-line",
         "stream" : "ext://sys.stdout"
       },
       "file_handler": {
-        "level": "DEBUG",
+        "level": "INFO",
         "class": "logging.handlers.RotatingFileHandler",
         "formatter": "single-line",
         "filename": "/tmp",
@@ -53,6 +53,6 @@
     "loggers": { },
     "root": {
       "handlers": ["console", "file_handler"],
-      "level": "DEBUG"
+      "level": "INFO"
     }
 }

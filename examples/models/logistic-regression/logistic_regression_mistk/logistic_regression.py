@@ -21,6 +21,7 @@
 import os
 import pickle
 import numpy as np 
+import base64, pkg_resources
 
 from sklearn.linear_model import LogisticRegression
 from logistic_regression_mistk.dataset_mnist import load_training_data, load_test_data
@@ -204,15 +205,71 @@ class ScikitLearnLogisticRegressionModel(AbstractModel):
                 writer.write(self._Z_test[i] + "," + str(self._predictions[i])
                     + "," + str(self._confidence[i]) + "\n")
                 
-    def do_stream_predict(self, data_map: dict):
+    def do_stream_predict(self, data_map: dict, details: bool=False):
+        # predictions
         predictions = {}
+        detailed_data = {}
         for key, value in data_map.items():
             logger.debug('Predicting class for key ' + key)
-            prediction = self._regr.predict(value.reshape(1, -1))
+            # assumes image has already been reshaped appropriately for the model
+            image = base64.b64decode(value)
+            image = np.frombuffer(image)
+            prediction = self._regr.predict([image])
+            detailed_data[key] = self._regr.predict_proba([image])
             logger.debug('Predicting: ' + str(prediction))
-            predictions[key] = prediction[0]
+            predictions[key] = int(prediction[0])
+            
+        if details:
+            # additional details for predictions
+            predictions["details"] = self._format_stream_predict_details(predictions, detailed_data)
+              
         return predictions
     
+        
+    def _format_stream_predict_details(self, predictions, prediction_details):
+        """
+        Format stream predict details in the form of NGX Markdown 
+        :param predictions: predictions for each streaming image
+        :param prediction_details: prediction probabilities for each streaming image
+        
+        """
+        details = "# ATL Logistic Regression Model Results"
+        details += "\nThese section contains details about the **ATL Logistic Regression Model Results**.<br/><br/>"
+        details += "<br/><br/>"
+        
+        metric_image_path = 'metrics-test.png'
+        metric_image_data = pkg_resources.ResourceManager().resource_stream(__name__, 'metrics-test.png')
+        encoded_bytes = base64.b64encode(metric_image_data.read()).decode('UTF-8')
+        details += "\n## Initial Training Results\n"
+        details += f"\n![Test](data:image/png;base64,{encoded_bytes})"
+        details += "<br/><br/>"
+        
+        details += "\n## Trained Model Streaming Results"
+        details += "<br/><br/>"
+        
+        for image, preds in prediction_details.items():
+            details += f"\n#### For image {image} with prediction of {predictions[image]}"
+            details += "\n\n| Class        | Probability |"
+            details += "\n| ------------- |:-------------:|"
+            for i in range(len(self._regr.classes_)): 
+                details += f"\n| {self._regr.classes_[i]}        | {round(preds[0][i], 3)} |"
+            details += "\n\n"
+    
+        
+        return details
+
+    def _example_image_reshape(self, image_path):
+        """
+        Example to reshape image (if needed) for streaming prediction. Must be done to image prior to stream_predict.
+        :param image_path: path to image
+        """
+        
+        im = PIL.Image.open(image_path)
+        image_data = np.array(im)
+        # Convert from [0, 255] -> [0.0, 1.0].
+        image = np.multiply(image, 1.0 / 255.0) 
+        return image
+
     def do_generate(self):
         """
         Executes/resumes the generate activity
@@ -230,6 +287,7 @@ class ScikitLearnLogisticRegressionModel(AbstractModel):
         """
         msg = "this model doesn't support 'save_generations'"
         raise NotImplementedError(msg)
+
 
     def do_terminate(self):
         pass

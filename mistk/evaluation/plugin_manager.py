@@ -1,13 +1,19 @@
-# -*- coding: utf-8 -*-
+##############################################################################
 #
-# Content developed by Lockheed Martin ATL for AFRL/RIS 
-# Contract #: FA8750-17-C-0282.
+#    This program is free software: you can redistribute it and/or modify
+#    it under the terms of the GNU General Public License as published by
+#    the Free Software Foundation, either version 3 of the License, or
+#    (at your option) any later version.
 #
-# Unlimited Government Rights
+#    This program is distributed in the hope that it will be useful,
+#    but WITHOUT ANY WARRANTY; without even the implied warranty of
+#    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+#    GNU General Public License for more details.
 #
-# Distribution C.  Distribution authorized to US Government agencies and
-# their contractors Administrative or Operational Use, October 2017.
-# Other requests for this document shall be referred to AFRL/RIS.
+#    You should have received a copy of the GNU General Public License
+#    along with this program.  If not, see <https://www.gnu.org/licenses/>.
+#
+##############################################################################
 
 import importlib
 import json
@@ -81,7 +87,10 @@ class EREPluginManager(object):
                 logger.info('metric json loading: ' + str(metric_dict))
                 metric_object = datautils.deserialize_model(metric_dict, MistkMetric)
                 logger.info('metric loaded: ' + str(metric_object))
-                self._metric_dict[metric_object.package + '.' + metric_object.method] = metric_object
+                if metric_object.package and metric_object.method:
+                    self._metric_dict[metric_object.package + '.' + metric_object.method] = metric_object
+                else:
+                    self._metric_dict[metric_object.object_info.name] = metric_object
                 self._metric_list.append(metric_object)
     
         logger.info('Metrics loaded.')

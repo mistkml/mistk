@@ -18,11 +18,11 @@
 import setuptools
 
 REQUIRES=[
-    'pandas == 0.20.3',
-    'scikit-learn  == 0.19.1',
-    'numpy == 1.13.3',
+    'pandas >= 0.20.3',
+    'scikit-learn  >= 0.19.1',
+    'numpy >= 1.13.3',
     'docker == 2.7.0',
-    'scipy == 1.0.0',
+    'scipy >= 1.0.0',
     'mistk'
 ]
 

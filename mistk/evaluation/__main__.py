@@ -32,4 +32,8 @@ _endpoint_service.load_metrics_spec(_module)
 _endpoint_service.evaluation_plugin = _evaluation_plugin
 _evaluation_plugin.endpoint_service = _endpoint_service
 
-_endpoint_service.start_server()
+try:
+    service_port = sys.argv[3]
+    _endpoint_service.start_server(port=int(service_port))
+except IndexError:
+    _endpoint_service.start_server() # defaults to 8080

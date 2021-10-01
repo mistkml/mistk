@@ -138,12 +138,12 @@ class TestHarnessTest(unittest.TestCase):
         
         try:
             # evaluate model
-            self.harness.evaluate(evaluation, assessment_type, None, model_data_path, 'predictions', model_data_path, model_data_path)
+            self.harness.evaluate(evaluation, assessment_type, None, model_data_path, model_data_path, 'predictions', model_data_path, model_data_path, model_data_path)
 
         except Exception as ex:
             logging.exception(str(ex))
        
-        eval_saved = glob.glob(model_data_path + '/eval_results_*.json')
+        eval_saved = glob.glob(model_data_path + '/eval*.json')
         self.assertTrue(eval_saved, "Metrics json file from evaluation was not saved to the folder %s" % model_data_path)
     
  

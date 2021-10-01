@@ -34,11 +34,10 @@ parser = argparse.ArgumentParser(description='Test harness for validating model 
                                 'python -m mistk_test_harness --train /my/dataset/folder --model-path /my/model/folder --model-save-path /my/trained/model/folder --model mymodel.MyImplementedModel\n' +
                                 'python -m mistk_test_harness --train /my/dataset/folder --model-path /my/model/folder --model-save-path /my/trained/model/folder --model http://localhost:8080\n' +
                                 'python -m mistk_test_harness --train /my/dataset/folder --model-path /my/model/folder --model-save-path /my/trained/model/folder --model repo/mymodelimpl\n' +
-                                'python -m mistk_test_harness --predict /my/dataset/folder --model-path /my/model/folder --predictions-path /my/predictions/folder\n' +
-                                '\t--ground-truth-path /ground/truth/folder --evaluations-input-path /my/predictions/folder --evaluations-input-format predictions --evaluate BinaryClassification --model mymodel.MyImplementedModel\n' +
-                                'python -m mistk_test_harness --generate /my/dataset/folder --model mymodel.MyImplementedModel --model-path /my/model/folder --generations-path /my/generations/folder\n' +
-                                '\t--ground-truth-path /ground/truth/folder --evaluations-input-path /my/generations/folder --evaluations-input-format generations --evaluate BinaryClassification --model mymodel.MyImplementedModel\n' +
-                                'python -m mistk_test_harness --predictions-path /my/predictions/folder --ground-truth-path /ground/truth/folder --evaluate BinaryClassification\n\n' +
+                                'python -m mistk_test_harness --predict /my/dataset/folder --model-path /my/model/folder --predictions-path /my/predictions/folder --model mymodel.MyImplementedModel\n' +
+                                'python -m mistk_test_harness --generate --model mymodel.MyImplementedModel --model-path /my/model/folder --generations-path /my/generations/folder\n' +
+                                '\t--ground-truth-path /ground/truth/folder --evaluations-input-path /my/generations/folder --evaluations-input-format generations --evaluate BinaryClassification --evaluation-output-path  /my/output/folder --model mymodel.MyImplementedModel\n' +
+                                'python -m mistk_test_harness --evaluate BinaryClassification --evaluations-input-path /my/predictions/folder --ground-truth-path /ground/truth/folder --evaluation-output-path  /my/output/folder  --evaluations-input-format predictions \n' +
                                 'python -m mistk_test_harness --transform-output-path /tmp/ --transform-input-paths /my/input/folder/1 /my/input/folder/2 ... /my/input/folder/n\n' +
                                 '\t--transform-properties /my/properties/file --transform mytransform.MyTransformImplementation\n' +
                                 'python -m mistk_test_harness --transform-output-path /tmp/ --transform-input-paths /my/input/folder --transform http://localhost:8080\n'+
@@ -80,6 +79,8 @@ parser.add_argument('--hyperparams', metavar='FILE',
                     help='Local file containing json dictionary of model hyperparameters')
 parser.add_argument('--stream-predict', metavar='FILE',
                     help='Local file containing json dictionary of ids to base64 encoded input data')
+parser.add_argument('--stream-properties', metavar='FILE',
+                    help='Local file containing json dictionary of streaming properties')
 parser.add_argument('--transform', metavar='TRANSFORM',
                     help='Transform module/package, service endpoint URL, or Docker image')
 parser.add_argument('--transform-output-path', metavar='PATH',
@@ -93,9 +94,12 @@ parser.add_argument('--evaluation-output-path', metavar='PATH',
 parser.add_argument('--evaluation-properties', metavar='FILE',
                     help='Local file containing json dictionary of evaluation properties')
 parser.add_argument('--metrics', metavar='METRIC',
-                    help='Comma delimited list of metric names for metrics to be evaluated.')
-parser.add_argument('--disable-container-shutdown', action='store_true', help='Disables automatic shutdown of the model or transform docker container')
-parser.add_argument('--logs', action='store_true', help='Show all MISTK log output (debug)')
+                    help='Comma delimited list of metric names for metrics to be evaluated')
+parser.add_argument('--port', metavar='PORT', default='8080',
+                    help='Web server port to use, defaults to 8080')
+parser.add_argument('--disable-container-shutdown', action='store_true', 
+                    help='Disables automatic shutdown of the model or transform docker container')
+parser.add_argument('--logs', action='store_true', help='Show all MISTK log output (info)')
 
 args = parser.parse_args()
 
@@ -119,8 +123,8 @@ if args.generate and not args.model:
 
 if args.evaluate:
     if args.evaluate not in evaluation_types:
-        print('--evaluate TYPE must be one of: ' + ', '.join(evaluation_types))
-        sys.exit()
+        print('--evaluate TYPE default values are: ' + ', '.join(evaluation_types))
+        print('** Make sure additional evaluate TYPEs are registered as assessment_types with the system before use **')
     if not args.evaluations_input_path or not args.evaluations_input_format or not args.ground_truth_path or not args.evaluation_output_path:
         print('--evaluate flag requires --ground-truth-path , --evaluation-output-path, --evaluations-input-path, and --evaluations-input-format')
         sys.exit()
@@ -140,6 +144,12 @@ else:
 if args.stream_predict:
     with open(args.stream_predict) as file:
         stream_input = json.load(file)
+
+if args.stream_properties:
+    with open(args.stream_properties) as file:
+        stream_properties = json.load(file)
+else:
+    stream_properties = None
 
 if args.transform_properties:
     with open(args.transform_properties) as file:
@@ -163,6 +173,7 @@ if args.model:
     model_train_path = os.path.abspath(args.train) if args.train else None
     model_test_path = os.path.abspath(args.predict) if args.predict else None
     model_predictions_path = os.path.abspath(args.predictions_path) if args.predictions_path else None
+    model_predictions_validation_path = model_predictions_path
     model_generations_path = os.path.abspath(args.generations_path) if args.generations_path else None
     model_path = os.path.abspath(args.model_path) if args.model_path else None
     model_save_path = os.path.abspath(args.model_save_path) if args.model_save_path else None
@@ -197,7 +208,7 @@ if args.model:
         print('Starting model_container ' + args.model)
         model_container = Container(args.model)
         name = model_container.run(volumes)
-        model = 'http://localhost:8080'
+        model = f'http://localhost:{args.port}'
 
     if model_train_path:
         dataset_map['train'] = model_train_path
@@ -253,7 +264,7 @@ if args.transform:
         print('Starting transform_container ' + args.transform)
         transform_container = Container(args.transform)
         name = transform_container.run(volumes)
-        transform = 'http://localhost:8080'
+        transform = f'http://localhost:{args.port}'
         
 # Evaluation
 # Set up the test harness for evaluations        
@@ -261,7 +272,9 @@ evaluation_container = None
 if args.evaluate:
     eval = args.evaluation
     gt_path = os.path.abspath(args.ground_truth_path)
+    gt_validation_path = gt_path
     eval_input_path = os.path.abspath(args.evaluations_input_path)
+    eval_input_validation_path = eval_input_path
     eval_input_format = args.evaluations_input_format
     eval_path = os.path.abspath(args.evaluation_output_path)
 
@@ -302,7 +315,7 @@ if args.evaluate:
         print('Container volumes ' + str(volumes))
         evaluation_container = Container(args.evaluation)
         name = evaluation_container.run(volumes)
-        eval = 'http://localhost:8080'
+        eval = f'http://localhost:{args.port}'
 
 harness = TestHarness()
     
@@ -315,8 +328,11 @@ try:
             harness.model_train(model_save_path)
     
         if args.predict:
-            harness.model_predict(model_predictions_path)
-            
+            harness.model_predict(model_predictions_path, model_predictions_validation_path)
+        
+        if args.stream_properties:
+            harness.model_update_stream_properties(stream_properties)
+
         if args.stream_predict:
             harness.model_stream_predict(stream_input)
         
@@ -330,7 +346,7 @@ try:
             # Backwards compatible for now with old non test harness evaluations
             evaluator.perform_assessment(args.evaluate, eval_input_path, eval_input_format, gt_path, eval_path)
         else:
-            harness.evaluate(eval, args.evaluate, metrics, eval_input_path, eval_input_format, gt_path, eval_path, evaluation_properties)
+            harness.evaluate(eval, args.evaluate, metrics, eval_input_path, eval_input_validation_path, eval_input_format, gt_path, gt_validation_path, eval_path, evaluation_properties)
         print('Evaluation completed, verify assessment output in ' + os.path.abspath(eval_path))
 
     if args.transform:

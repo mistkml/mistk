@@ -100,12 +100,13 @@ class TestHarness(object):
             self._model_service.save_model(model_save_path)
             self.wait_for_state(self._model_service, 'save_model', 'ready')
 
-    def model_predict(self, predictions_path=None):
+    def model_predict(self, predictions_path=None, predictions_validation_path=None):
         """
         Call predict and, if prediction_path is supplied, save_predictions on model.
         Output model status.
         
         :param predictions_path: The path to which the model's prediction results should be saved
+        :param predictions_validation_path: The path to which the model's prediction results will be validated
         """
         self._model_service.predict()
         self.wait_for_state(self._model_service, 'predict', 'ready')
@@ -113,8 +114,9 @@ class TestHarness(object):
         if predictions_path:
             self._model_service.save_predictions(predictions_path)
             self.wait_for_state(self._model_service, 'save_predictions', 'ready')
-            if not validate_predictions_csv(predictions_path):
-                raise Exception("Failed to validate predictions csv file at %s" % predictions_path)
+            if predictions_validation_path:
+                if not validate_predictions_csv(predictions_validation_path):
+                    raise Exception("Failed to validate predictions csv file at %s" % predictions_validation_path)
             
     def model_stream_predict(self, stream_input):
         """
@@ -126,6 +128,14 @@ class TestHarness(object):
         predictions = self._model_service.stream_predict(stream_input)
         print('Stream prediction results:')
         print(predictions)
+
+    def model_update_stream_properties(self, stream_properties):
+        """
+        Call update_stream_properties with the supplied stream_properties dict.
+
+        :param stream_properties: A JSON dictionary of metadata properties to be used by the model
+        """
+        self._model_service.update_stream_properties(stream_properties)
         
     def model_generate(self, generations_path=None):
         """
@@ -217,7 +227,7 @@ class TestHarness(object):
         self.wait_for_state(self._transform_service, 'transform', 'ready')
         
         
-    def evaluate(self, evaluation, assessment_type, metrics_names, input_data_path, evaluation_input_format, gt_path, evaluation_path, properties=None):
+    def evaluate(self, evaluation, assessment_type, metrics_names, input_data_path, input_data_validation_path, evaluation_input_format, gt_path, gt_validation_path, evaluation_path, properties=None):
         """
         Creates a evaluation service wrapper and performs the metrics evaluation
         on the dataset(s) provided.
@@ -229,18 +239,20 @@ class TestHarness(object):
         'MultilabelClassification', 'MulticlassClassification', 'Regression'}
         :param metric_names: Specific metrics to evaluate against instead of all metrics defined by assessment_type
         :param input_data_path: Path to input data for the evaluation
+        :param input_data_validation_path: Path to input data for the evaluation to be validated
         :param evaluation_input_format: The format of the input data
-        :param ground_truth_path: The directory path where the ground_truth.csv file is located
+        :param gt_path: The directory path where the ground_truth.csv file is located
+        :param gt_validation_path: The directory path where the ground_truth.csv file will be validated
         :param evaluation_path: A directory path to where all of the output files should be stored
         :param properties: A JSON dictionary of properties relevant to this evaluation
         """
         print('Evaluating...')
         
         # Validate the input ground truth and predictions csv file
-        if not validate_groundtruth_csv(gt_path):
+        if not validate_groundtruth_csv(gt_validation_path):
             msg = "Failed to validate ground truth csv file at %s" % gt_path
             raise Exception(msg)
-        if "predictions" == evaluation_input_format and not validate_predictions_csv(input_data_path):
+        if "predictions" == evaluation_input_format and not validate_predictions_csv(input_data_validation_path):
             msg = "Failed to validate predictions csv file at %s" % input_data_path
             raise Exception(msg)
         

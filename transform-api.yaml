@@ -1,0 +1,123 @@
+swagger: '2.0'
+info:
+  version: 1.0.0
+  title: Model Integration Software ToolKit - Data Transformation
+basePath: /v1/mistk/transform
+schemes:
+  - http
+consumes:
+  - application/json
+produces:
+  - application/json
+  
+paths:
+
+  /transform:
+    post:
+      summary: Performs the transforms defined for this plugin
+      operationId: transform
+      tags: [ Transform Plugin Endpoint ]
+      x-swagger-router-controller: mistk.transform.service
+      parameters:
+        - name: initParams
+          description: A list of directory paths where input files can be found. 
+          in: body
+          required: true
+          schema:
+            $ref: "#/definitions/TransformSpecificationInitParams"
+      responses:
+        200:
+          description: Executing transforms         
+        405:
+          description: "Invalid input"
+          schema:
+            $ref: "../smlcore/sml-api.yaml#/definitions/ServiceError"
+        500:
+          description: Unexpected error
+          schema:
+            $ref: "../smlcore/sml-api.yaml#/definitions/ServiceError" 
+  
+  /status:
+    get:
+      summary: Retrieves the status of the transform plugin
+      operationId: getStatus
+      tags: [ Transform Plugin Endpoint ]
+      x-swagger-router-controller: mistk.transform.service
+      parameters:
+        - name: watch
+          description: >
+            Watch for changes to the described resources and return them as a
+            stream of add, update, and remove notifications.
+            Specify resourceVersion.
+          required: false
+          in: query
+          type: boolean
+        - name: resourceVersion
+          description: >
+            When specified with a watch call, shows changes that occur after
+            that particular version of a resource. Defaults to changes from the
+            beginning of history.
+          required: false
+          in: query
+          type: number
+      responses:
+        200:
+          description: The status of the Transform Plugin
+          schema:
+            $ref: "../smlcore/sml-api.yaml#/definitions/TransformInstanceStatus"
+        500:
+          description: Unexpected error
+          schema:
+            $ref: "../smlcore/sml-api.yaml#/definitions/ServiceError"
+            
+  /shutdown:
+    post:
+      summary: Shutdowns the transform plugin and cleans up any resources. 
+      operationId: terminate
+      tags: [ Transform Plugin Endpoint ]
+      x-swagger-router-controller: mistk.transform.service
+      responses:
+        200:
+          description: Transform Plugin successfully shutdown
+        500:
+          description: Unexpected error
+          schema:
+            $ref: "../smlcore/sml-api.yaml#/definitions/ServiceError"
+   
+  /apiVersion:
+    get:
+      operationId: getApiVersion
+      x-swagger-router-controller: mistk.transform.service
+      summary: Returns the version of the MISTK API
+      description: Returns the version of the MISTK API
+      tags: [ Transform Plugin Endpoint ]
+      responses:
+        '200':
+          description: >
+            The MISTK API Version
+          schema:
+            type: string
+        '500':
+          description: General server runtime exception
+            
+definitions:
+  TransformSpecificationInitParams:
+    description: >
+      The intialization parameters used by the Transform Specification when calling its
+      initialize fuction
+    type: object
+    required: 
+      - inputDatasets
+      - outputDatasets
+    properties:
+      inputDatasets:
+        description: A list of directory paths where input files can be found. 
+        type: array
+        items:
+          $ref: "./mistk-api.yaml#/definitions/MistkDataset"      
+      outputDataset:
+        description: A list of directory paths where output files will be saved
+        $ref: "./mistk-api.yaml#/definitions/MistkDataset"
+      properties:
+        description: A dictionary of key value pairs for transform plugin arguments.    
+        type: object

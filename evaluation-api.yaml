@@ -1,0 +1,162 @@
+swagger: '2.0'
+info:
+  version: 1.0.0
+  title: Model Integration Software ToolKit - Metric Evaluation
+basePath: /v1/mistk/evaluation
+schemes:
+  - http
+consumes:
+  - application/json
+produces:
+  - application/json
+  
+paths:
+
+  /evaluate:
+    post:
+      summary: Performs the evaluation defined for this plugin
+      operationId: evaluate
+      tags: [ Evaluation Plugin Endpoint ]
+      x-swagger-router-controller: mistk.evaluation.service
+      parameters:
+        - name: initParams
+          description: A list of metrics to run and ground truth and prediction file paths to run the metrics against 
+          in: body
+          required: true
+          schema:
+            $ref: "#/definitions/EvaluationSpecificationInitParams"
+      responses:
+        200:
+          description: Executing evaluation         
+        405:
+          description: "Invalid input"
+          schema:
+            $ref: "../smlcore/sml-api.yaml#/definitions/ServiceError"
+        500:
+          description: Unexpected error
+          schema:
+            $ref: "../smlcore/sml-api.yaml#/definitions/ServiceError" 
+   
+  /metrics:
+    get:
+      summary: Retrieves the metrics available to perform for the evaluation plugin
+      operationId: getMetrics
+      tags: [ Evaluation Plugin Endpoint ]
+      x-swagger-router-controller: mistk.evaluation.service
+      responses:
+        200:
+          description: Metrics able to be run for evaluation
+          schema:
+            type: array
+            items:
+              $ref: "./mistk-api.yaml#/definitions/MistkMetric"         
+        405:
+          description: "Invalid input"
+          schema:
+            $ref: "../smlcore/sml-api.yaml#/definitions/ServiceError"
+        500:
+          description: Unexpected error
+          schema:
+            $ref: "../smlcore/sml-api.yaml#/definitions/ServiceError" 
+  
+  /status:
+    get:
+      summary: Retrieves the status of the evaluation plugin
+      operationId: getStatus
+      tags: [ Evaluation Plugin Endpoint ]
+      x-swagger-router-controller: mistk.evaluation.service
+      parameters:
+        - name: watch
+          description: >
+            Watch for changes to the described resources and return them as a
+            stream of add, update, and remove notifications.
+            Specify resourceVersion.
+          required: false
+          in: query
+          type: boolean
+        - name: resourceVersion
+          description: >
+            When specified with a watch call, shows changes that occur after
+            that particular version of a resource. Defaults to changes from the
+            beginning of history.
+          required: false
+          in: query
+          type: number
+      responses:
+        200:
+          description: The status of the Evaluation Plugin
+          schema:
+            $ref: "../smlcore/sml-api.yaml#/definitions/EvaluationInstanceStatus"
+        500:
+          description: Unexpected error
+          schema:
+            $ref: "../smlcore/sml-api.yaml#/definitions/ServiceError"
+            
+  /shutdown:
+    post:
+      summary: Shutdowns the evaluation plugin and cleans up any resources. 
+      operationId: terminate
+      tags: [ Evaluation Plugin Endpoint ]
+      x-swagger-router-controller: mistk.evaluation.service
+      responses:
+        200:
+          description: Evaluation Plugin successfully shutdown
+        500:
+          description: Unexpected error
+          schema:
+            $ref: "../smlcore/sml-api.yaml#/definitions/ServiceError"
+   
+  /apiVersion:
+    get:
+      operationId: getApiVersion
+      x-swagger-router-controller: mistk.evaluation.service
+      summary: Returns the version of the MISTK API
+      description: Returns the version of the MISTK API
+      tags: [ Evaluation Plugin Endpoint ]
+      responses:
+        '200':
+          description: >
+            The MISTK API Version
+          type: string
+        '500':
+          description: General server runtime exception
+            
+definitions:
+  EvaluationSpecificationInitParams:
+    description: >
+      The initialization parameters used by the Evaluation Specification when calling its
+      initialize function
+    type: object
+    required: 
+      - assessment_type
+      - metrics
+      - input_data_path
+      - ground_truth_path
+      - evaluation_input_format
+    properties:
+      assessment_type:
+        description: Assessment type to use for the evaluation
+        type: string
+      metrics:
+        description: A list of metrics to use for the evaluation 
+        type: array
+        items:
+          $ref: "./mistk-api.yaml#/definitions/MistkMetric"
+      input_data_path:
+        description: Path to input data for the evaluation
+        type: string
+      evaluation_input_format:
+        description: The format of the input data
+        type: string
+        enum:
+        - predictions
+        - generations
+      ground_truth_path:
+        description: Path to ground_truth.csv file
+        type: string     
+      evaluation_path:
+        description: Path for evaluation output file
+        type: string
+      properties:
+        description: A dictionary of key value pairs for evaluation plugin arguments.    
+        type: object

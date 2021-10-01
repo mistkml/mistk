@@ -107,7 +107,7 @@ class EvaluationPluginEndpoint():
         """
         Gets the API specification of the module specified
         """
-        return yaml.load(pkg_resources.ResourceManager().resource_stream('mistk.evaluation', '/server/swagger/swagger.yaml'), Loader=yaml.FullLoader)         
+        return yaml.load(pkg_resources.ResourceManager().resource_stream('mistk.evaluation', '/server/swagger/swagger.yaml'), Loader=yaml.SafeLoader)
     
     def load_metrics_spec(self, module):
         """

@@ -33,7 +33,7 @@ REQUIRES=[
     'urllib3 >= 1.25.3',
     'six >= 1.12.0',
     'gevent == 1.4.0',
-    'bottle == 0.12.16',
+    'bottle == 0.12.20',
     'flask == 1.0.2',
     'csvvalidator >= 1.2'
 ]

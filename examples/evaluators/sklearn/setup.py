@@ -22,7 +22,7 @@ from setuptools import setup, find_packages
 REQUIRES=[
     'setuptools == 21.0.0',
     'pandas == 0.20.3',
-    'numpy == 1.13.3',
+    'numpy == 1.22.0',
     'scikit-learn  == 0.19.1',
     'SciPy == 1.1.0',
     'mistk'

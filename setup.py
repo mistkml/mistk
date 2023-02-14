@@ -19,8 +19,8 @@ import setuptools
 
 
 REQUIRES=[
-    'Werkzeug == 0.16.1',
-    'connexion == 1.1.15',
+    'Werkzeug >= 0.16.1',
+    'connexion >= 1.1.15',
     'certifi >= 2019.6.16',
     'python-dateutil >= 2.6.1',
     'setuptools >= 21.0.0',
@@ -33,16 +33,17 @@ REQUIRES=[
     'urllib3 >= 1.25.3',
     'six >= 1.12.0',
     'gevent == 1.4.0',
-    'bottle == 0.12.16',
-    'flask == 1.0.2',
+    'bottle >= 0.12.16',
+    'flask >= 1.0.2',
     'csvvalidator >= 1.2'
 ]
+
+version_args = {"version": "1.0.1"}
 
 setuptools.setup(
     name='mistk',
     packages=setuptools.find_packages() + ['conf'],
-    package_data={'conf': ['*.ini']},
+    package_data={'conf': ['*.ini', 'log_config.json']},
     include_package_data=True,
     install_requires=REQUIRES,
-    use_scm_version = {"root": "..", "relative_to": __file__},
-    setup_requires=['setuptools_scm'])
+    **version_args)

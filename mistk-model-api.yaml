@@ -196,6 +196,14 @@ paths:
           type: "object"
           additionalProperties:
             type: "string"
+      - name: details
+        in: query
+        description: >
+          Boolean flag to indicate whether prediction details (markdown) should be included
+          in predictions dictionary.
+        required: false
+        type: boolean
+        default: "False"
       responses:
         200:
           description: "Dictionary of IDs to predictions"

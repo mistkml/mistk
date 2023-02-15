@@ -19,7 +19,7 @@ import setuptools
 
 
 REQUIRES=[
-    'Werkzeug == 0.16.1',
+    'Werkzeug == 2.2.3',
     'connexion == 1.1.15',
     'certifi >= 2019.6.16',
     'python-dateutil >= 2.6.1',

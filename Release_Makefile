@@ -96,7 +96,7 @@ dist: $(NAME) docs  $(shell find $(NAME)) test-harness $(shell find . -maxdepth 
 	rm -rf dist && mkdir dist
 	export VERSION=$(VERSION)
 	$(PYTHON) --version
-	ls *
+	pip install wheel
 	$(PYTHON) setup.py bdist_wheel -d dist/$(NAME)/
 	cd test-harness && $(PYTHON) setup.py bdist_wheel  -d ../dist/$(NAME)-test-harness/
 

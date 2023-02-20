@@ -57,7 +57,6 @@ $(NAME)/server: gen/$(NAME)/model_server gen/$(NAME)/transform_server gen/$(NAME
 	mkdir -p $(NAME)/evaluation/server
 	cp -rv gen/$(NAME)/evaluation_server/$(NAME).evaluation.server/* $(NAME)/evaluation/server
 	cp -rv gen/$(NAME)/evaluation_server/$(NAME)/evaluation/server/* $(NAME)/evaluation/server
-	
 
 gen/$(NAME)/model_client: mistk-model-api.yaml
 	rm -rf gen/$(NAME)/model_client
@@ -88,7 +87,6 @@ $(NAME)/client: gen/$(NAME)/model_client gen/$(NAME)/transform_client gen/$(NAME
 	mkdir -p mistk/evaluation/client
 	cp -rv gen/$(NAME)/evaluation_client/mistk.evaluation.client/* mistk/evaluation/client
 	cp -rv gen/$(NAME)/evaluation_client/mistk/evaluation/client/* mistk/evaluation/client
-	
 
 $(NAME): $(NAME)/server $(NAME)/client 
 
@@ -124,4 +122,5 @@ swagger_docs:
 	$(CODEGEN) generate -l html -o $(OUTPUT_BASE_DIR)/docs/models -i $(OUTPUT_BASE_DIR)/mistk-model-api.yaml -D packageVersion=$(VERSION)
 	$(CODEGEN) generate -l html -o $(OUTPUT_BASE_DIR)/docs/models -i $(OUTPUT_BASE_DIR)/mistk-transform-api.yaml -D packageVersion=$(VERSION)
 	$(CODEGEN) generate -l html -o $(OUTPUT_BASE_DIR)/docs/models -i $(OUTPUT_BASE_DIR)/mistk-evaluation-api.yaml -D packageVersion=$(VERSION)
+
 docs: swagger_docs ## Generate all documentation

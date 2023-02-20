@@ -22,4 +22,10 @@ jobs:
         
     - name: Build wheel
       run: make -f Release_Makefile dist
+      
+    - name: Publish artifact
+      uses: actions/upload-artifact@v2
+      with:
+        name: mistk-py3-none-any-${{ github.sha }}.whl
+        path: dist/mistk/mistk-*-py3-none-any.whl
 

@@ -95,6 +95,7 @@ $(NAME): $(NAME)/server $(NAME)/client
 dist: $(NAME) docs  $(shell find $(NAME)) test-harness $(shell find . -maxdepth 1 -type f) ## Create a python binary wheel distribution
 	rm -rf dist && mkdir dist
 	export VERSION=$(VERSION)
+	$(PYTHON) --version
 	$(PYTHON) setup.py bdist_wheel -d dist/$(NAME)/
 	cd test-harness && $(PYTHON) setup.py bdist_wheel  -d ../dist/$(NAME)-test-harness/
 

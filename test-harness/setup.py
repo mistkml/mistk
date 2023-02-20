@@ -26,11 +26,12 @@ REQUIRES=[
     'mistk'
 ]
 
+version_args = {"version": "1.0.1"}
+
 
 setuptools.setup(
     name='mistk-test-harness',
     packages=setuptools.find_packages(),
     package_data={'mistk_test_harness': ['*.json']},
     install_requires=REQUIRES,
-    use_scm_version = {"root": "../..", "relative_to": __file__},
-    setup_requires=['setuptools_scm'])
+    **version_args)

@@ -11,10 +11,15 @@ These instructions will get you a copy of the project up and running on your loc
 It is expected to that the following software is installed on the system when building the MISTK toolkit:
 
 ```
-Python 3.6
+Python 3.7
 Pip
 Docker
 ```
+
+### Building
+To build the mistk wheel from code, run the following:
+
+    make -f Release_Makefile dist
 
 ### Installing
 

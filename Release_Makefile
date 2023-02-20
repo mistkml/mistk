@@ -4,14 +4,14 @@ UID:=$(shell id -u)
 GID:=$(shell id -g)
 USER:=$(shell whoami)
 VERSION:=$(shell git describe --abbrev=0 --always --tags)
-PYTHON:=$(shell which python3.6)
+PYTHON:=$(shell which python3.7)
 
 NAMESPACE:=mistk
 
-OUTPUT_BASE_DIR:=/$(NAMESPACE)/$(NAME)
+OUTPUT_BASE_DIR:=./
 
 # This needs to be imported from a sub directory.
-BASE_DIR:=$(shell pwd)/../
+BASE_DIR:=$(shell pwd)/
 CODEGEN:=docker run --rm -u $(UID):$(GID) -v $(BASE_DIR):/$(NAMESPACE) -w /$(NAMESPACE) swaggerapi/swagger-codegen-cli:2.4.8
 
 .PHONY: help
@@ -57,7 +57,6 @@ $(NAME)/server: gen/$(NAME)/model_server gen/$(NAME)/transform_server gen/$(NAME
 	mkdir -p $(NAME)/evaluation/server
 	cp -rv gen/$(NAME)/evaluation_server/$(NAME).evaluation.server/* $(NAME)/evaluation/server
 	cp -rv gen/$(NAME)/evaluation_server/$(NAME)/evaluation/server/* $(NAME)/evaluation/server
-	
 
 gen/$(NAME)/model_client: mistk-model-api.yaml
 	rm -rf gen/$(NAME)/model_client
@@ -88,13 +87,14 @@ $(NAME)/client: gen/$(NAME)/model_client gen/$(NAME)/transform_client gen/$(NAME
 	mkdir -p mistk/evaluation/client
 	cp -rv gen/$(NAME)/evaluation_client/mistk.evaluation.client/* mistk/evaluation/client
 	cp -rv gen/$(NAME)/evaluation_client/mistk/evaluation/client/* mistk/evaluation/client
-	
 
 $(NAME): $(NAME)/server $(NAME)/client 
 
 dist: $(NAME) docs  $(shell find $(NAME)) test-harness $(shell find . -maxdepth 1 -type f) ## Create a python binary wheel distribution
 	rm -rf dist && mkdir dist
 	export VERSION=$(VERSION)
+	$(PYTHON) --version
+	pip install wheel
 	$(PYTHON) setup.py bdist_wheel -d dist/$(NAME)/
 	cd test-harness && $(PYTHON) setup.py bdist_wheel  -d ../dist/$(NAME)-test-harness/
 
@@ -122,4 +122,5 @@ swagger_docs:
 	$(CODEGEN) generate -l html -o $(OUTPUT_BASE_DIR)/docs/models -i $(OUTPUT_BASE_DIR)/mistk-model-api.yaml -D packageVersion=$(VERSION)
 	$(CODEGEN) generate -l html -o $(OUTPUT_BASE_DIR)/docs/models -i $(OUTPUT_BASE_DIR)/mistk-transform-api.yaml -D packageVersion=$(VERSION)
 	$(CODEGEN) generate -l html -o $(OUTPUT_BASE_DIR)/docs/models -i $(OUTPUT_BASE_DIR)/mistk-evaluation-api.yaml -D packageVersion=$(VERSION)
+
 docs: swagger_docs ## Generate all documentation

@@ -4,7 +4,7 @@ UID:=$(shell id -u)
 GID:=$(shell id -g)
 USER:=$(shell whoami)
 VERSION:=$(shell git describe --abbrev=0 --always --tags)
-PYTHON:=$(shell which python3.7)
+PYTHON:=$(shell which python3.8)
 
 NAMESPACE:=mistk
 
@@ -94,8 +94,8 @@ dist: $(NAME) docs  $(shell find $(NAME)) test-harness $(shell find . -maxdepth 
 	rm -rf dist && mkdir dist
 	export VERSION=$(VERSION)
 	$(PYTHON) --version
-	pip install wheel
-	$(PYTHON) setup.py bdist_wheel -d dist/$(NAME)/
+	pip install wheel build==0.10.0
+	$(PYTHON) -m build -o dist/$(NAME)/
 	cd test-harness && $(PYTHON) setup.py bdist_wheel  -d ../dist/$(NAME)-test-harness/
 
 install: dist ## Install the python library for the local user

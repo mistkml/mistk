@@ -26,7 +26,7 @@ REQUIRES=[
     'mistk'
 ]
 
-version_args = {"version": "1.0.1"}
+version_args = {"version": "1.0.2"}
 
 
 setuptools.setup(

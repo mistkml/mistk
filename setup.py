@@ -32,13 +32,13 @@ REQUIRES=[
     'PyYAML >= 5.1.0',
     'urllib3 >= 1.25.3',
     'six >= 1.12.0',
-    'gevent == 1.4.0',
+    'gevent == 23.9.1',
     'bottle >= 0.12.16',
     'flask >= 1.0.2',
     'csvvalidator >= 1.2'
 ]
 
-version_args = {"version": "1.0.1"}
+version_args = {"version": "1.0.2"}
 
 setuptools.setup(
     name='mistk',

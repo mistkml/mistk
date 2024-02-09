@@ -76,6 +76,7 @@ class ModelInstanceEndpoint():
         
         self._status_lock = RWLock() 
         self._task_lock = RWLock()
+        self._stream_lock = RWLock() 
         
         self._response_queue = Queue()
          
@@ -84,6 +85,8 @@ class ModelInstanceEndpoint():
         
         info = ObjectInfo('ModelInstanceStatus', resource_version=1)
         self._status = ModelInstanceStatus(object_info=info, state='started')
+        
+        self._header_json = ("Content-Type","application/json")
 
     def start_server(self, port=8080):
         """
@@ -157,13 +160,13 @@ class ModelInstanceEndpoint():
                 parameters={"objectives": params.objectives, 
                             "props": params.model_properties, 
                             "hparams": params.hyperparameters})
-            logger.debug('Created initialize model task', extra={'model_task': task})
+            logger.debug('Created initialize model task', extra={'model_task': task})          
+            self.add_task(task)
+            
         except RuntimeError as inst:
             msg = "Error during model initialization: %s" % str(inst)
             logger.exception(msg)
             return ServiceError(500, msg), 500
-        
-        self.add_task(task)
         
     def build_model(self, modelPath=None):
         """
@@ -177,10 +180,31 @@ class ModelInstanceEndpoint():
             task = ModelInstanceTask(operation="build_model", 
                                         parameters = {"path": modelPath})
             self.add_task(task)
+            
         except RuntimeError as inst:
             msg = "Error while building model: %s" % str(inst)
             logger.exception(msg)
-            return ServiceError(500, msg), 500    
+            return ServiceError(500, msg), 500
+        
+    def build_ensemble(self, ensemblePath=None, modelPaths=None):
+        """
+        Creates and returns a Task which builds the ensemble using the ensemble_path and model_paths provided
+        
+        :param ensemble_path: The path to the ensemble model file
+        :param model_paths: The paths to the model files in a dictionary. The key is the model name with the value being the model path.
+        :return: The created Task object
+        """
+        logger.debug("build ensemble called")
+        try:
+            task = ModelInstanceTask(operation="build_ensemble", 
+                                        parameters = {"ensemble_path": ensemblePath,
+                                                      "model_paths": modelPaths})
+            self.add_task(task)
+            
+        except RuntimeError as inst:
+            msg = "Error while building model: %s" % str(inst)
+            logger.exception(msg)
+            return ServiceError(500, msg), 500        
         
     def load_data(self, datasets):
         """
@@ -198,6 +222,7 @@ class ModelInstanceEndpoint():
             task = ModelInstanceTask(operation="load_data",
                         parameters = {"dataset_map": datasets})
             self.add_task(task)
+            
         except RuntimeError as inst:
             msg = "Error while loading data into model: %s" % str(inst)
             logger.exception(msg)
@@ -242,6 +267,7 @@ class ModelInstanceEndpoint():
         logger.debug("Predict called")
         try:
             self.add_task(ModelInstanceTask(operation="predict"))
+            
         except RuntimeError as inst:
             msg = "Error while kicking off prediction activity: %s" % str(inst)
             logger.exception(msg)
@@ -281,11 +307,46 @@ class ModelInstanceEndpoint():
             task = ModelInstanceTask(operation="update_stream_properties",
                                      parameters={"props": props})
             self.add_task(task)
+            
         except RuntimeError as inst:
             msg = "Error while kicking off stream prediction activity: %s" % str(inst)
             logger.exception(msg)
             return ServiceError(500, msg), 500
         
+    def stream_predict_source(self, source, format=None, props=None):
+        """
+        Retrieves the status of this ModelEndpointService
+        
+        :param watch: Optional flag indicating whether state changes should be monitored
+        :param resourceVersion: Optional version id that will be used as the minimum version number
+            for watched status changes. 
+        :return: The current status of this ModelEndpointService
+        """
+        logger.debug("Stream Predict with Source called")  
+        try:
+            with self._stream_lock.reader_lock:
+                
+                task = ModelInstanceTask(operation="stream_predict_source",
+                                     parameters={"source": source,
+                                                 "format": format,
+                                                 "props": props})
+                self.add_task(task)
+                
+                # response is streaming via a generator 
+                return Response(
+                    watch_manager.watch('stream_source', None, None),
+                    mimetype="application/json")
+        except RuntimeError as inst:
+            msg = "Error while retrieving streaming response for ModelEndpointService: %s" % str(inst)
+            logger.exception(msg)
+            return ServiceError(500, msg), 500
+        
+    def cancel_stream_predict_source(self):
+        logger.debug('Canceling stream predict with source.')
+        self._model._model_streaming = False
+        watch_manager.cancel_watch('stream_source')
+        
+                
     def save_predictions(self, dataPath):
         """
         Creates and returns a Task which saves the predictions generated by a model
@@ -300,6 +361,7 @@ class ModelInstanceEndpoint():
                 parameters = {"dataPath": dataPath})
 
             self.add_task(task)
+            
         except RuntimeError as inst:
             msg = "Error while saving predictions generated by model on path specified: %s" % str(inst)
             logger.exception(msg)
@@ -335,7 +397,21 @@ class ModelInstanceEndpoint():
             msg = "Error while saving generations created by model on path specified: %s" % str(inst)
             logger.exception(msg)
             return ServiceError(500, msg), 500             
-        
+    
+    def miniaturize(self, dataPath, includeHalfPrecision):
+        """
+        Creates and returns a Task which kicks off a miniaturize activity
+        :return: The created Task object
+        """
+        logger.debug("Miniaturize called")
+        try:
+            task = ModelInstanceTask(
+                operation="miniaturize",
+                parameters={"dataPath": dataPath, "includeHalfPrecision": includeHalfPrecision})
+            self.add_task(task)
+        except RuntimeError as inst:
+            return ServiceError(500, str(inst)), 500
+ 
     def pause (self):
         """
         Pauses the model during its current operation
@@ -446,9 +522,10 @@ class ModelInstanceEndpoint():
             task.id = uuid.uuid4().hex
             task.status = 'queued'
             task.submitted = datetime.now()
-            ops = ['initialize', 'load_data', 'build_model', 'train', 'pause', 
+            ops = ['initialize', 'load_data', 'build_model', 'build_ensemble', 'train', 'pause', 
                    'unpause', 'save_model', 'predict', 'save_predictions', 'stream_predict',
-                   'update_stream_properties', 'generate', 'save_generations'] 
+                   'stream_predict_source', 'update_stream_properties', 'generate',
+                   'save_generations', 'miniaturize'] 
              
             if not task.operation in ops:
                 msg = "Operation %s must be one of %s" % (str(task.operation), str(ops))
@@ -464,6 +541,12 @@ class ModelInstanceEndpoint():
                     self._old_tasks.insert(0, self._current_task)
                 self._current_task = task
                 task.status = 'running'
+                
+            if not self._valid_task_transition():
+                msg = "Operation %s invalid from state %s" % (str(self._current_task.operation), str(self.model.state))
+                self._current_task.status = 'failed'
+                logger.exception(msg)
+                raise RuntimeError(msg)
 
             self._thread_pool.submit(self._process_task)
             return task
@@ -471,7 +554,7 @@ class ModelInstanceEndpoint():
         except RuntimeError as inst:
             msg = "Error while adding task to ModelEndpointService and starting the task. %s" % str(inst)
             logger.exception(msg)
-            return ServiceError(500, msg), 500
+            raise RuntimeError(msg)
 
     def update_state(self, state=None, payload=None):
         """
@@ -492,6 +575,22 @@ class ModelInstanceEndpoint():
             logger.exception(msg)
             return ServiceError(500, msg), 500
         
+    def update_source_predictions(self, predictions=None):
+        """
+        Puts the stream predict result on the watch queue for the stream predict with
+        source call
+        
+        :param prediction: Dictionary for prediction response
+        """
+        try:
+            with self._stream_lock.writer_lock:
+                ver = self._status.object_info.resource_version + 1
+                watch_manager.notify_watch('stream_source', item=predictions, operation='added')
+        except RuntimeError as inst:
+            msg = "Error while updating state of the ModelEndpointService. %s" % str(inst)
+            logger.exception(msg)
+            return ServiceError(500, msg), 500
+        
     def put_response(self, response):
         """
         Adds a response to the response queue
@@ -503,7 +602,20 @@ class ModelInstanceEndpoint():
         Pops the latest response on the response queue
         """        
         return self._response_queue.get()
-                     
+    
+    def _valid_task_transition(self) -> bool:
+        """
+        Valid operation task from current state
+
+        :return: True if a valid transition, False if a invalid transition
+        """
+
+        logger.debug(f'valid state: {self.model._machine.get_triggers(self.model.state)}')
+        if self._current_task.operation in self.model._machine.get_triggers(self.model.state):
+            return True
+        else:
+            return False
+               
     def _process_task(self):
         """
         Processes the currently queued Task and updates its status as appropriate        
@@ -541,5 +653,5 @@ def initializeEndpointController(handler, *modules):
         
         fn2 = getattr(handler, name)
         sig2 = inspect.signature(fn2)
-        assert sig1 == sig2, "Can't redirect " + name +" : " + str(sig1) + "-" + str(sig2)
+        assert sig1 == sig2, f"Can't redirect {name} : {sig1} - {sig2})"
         globals()[name] = getattr(handler, name)

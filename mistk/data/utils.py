@@ -61,6 +61,12 @@ class PresumptiveJSONEncoder(FlaskJSONEncoder):
             return dikt
         return FlaskJSONEncoder.default(self, o)
 
+def serialize_model(data):
+    """
+    Encodes an SML object back into JSON serializable form.
+    """
+    return json.loads(PresumptiveJSONEncoder().encode(data))
+
 def deserialize_model(data, klass):
     """
     Deserializes list or dict to model.

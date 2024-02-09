@@ -18,16 +18,18 @@
 import importlib
 import os
 import time
+import json
 
 from mistk.model.abstract_model import AbstractModel
 from mistk.transform.abstract_transform_plugin import AbstractTransformPlugin
-from mistk.data import ModelInstanceInitParams, MistkDataset, ObjectInfo, TransformSpecificationInitParams, EvaluationSpecificationInitParams
+from mistk.data import ModelInstanceInitParams, MistkDataset, ObjectInfo, TransformSpecificationInitParams, EvaluationSpecificationInitParams, WatchEvent
 from mistk.model.service import ModelInstanceEndpoint
 from mistk.transform.service import TransformPluginEndpoint
 from mistk.evaluation.service import EvaluationPluginEndpoint
 from mistk_test_harness import model_service_wrapper, transform_service_wrapper, evaluation_service_wrapper
 from mistk.evaluation.abstract_evaluation_plugin import AbstractEvaluationPlugin
-from mistk.utils.csv_utils import validate_predictions_csv, validate_groundtruth_csv
+from mistk.utils.file_utils import validate_predictions, validate_groundtruth
+from mistk.data.utils import deserialize_model
 
 
 class TestHarness(object):
@@ -41,7 +43,7 @@ class TestHarness(object):
         self._evaluation_service = None
         self._status_version = 0
 
-    def model_init(self, model, objectives, dataset_map, model_path=None, model_props=None, hyperparams=None):
+    def model_init(self, model, objectives, dataset_map, model_path=None, model_props=None, hyperparams=None, ensemble_model_paths=None):
         """
         Instantiate model or remote endpoint wrapper.
         Call initialize, load_data, build_model on model.
@@ -69,8 +71,13 @@ class TestHarness(object):
         self._model_service.initialize_model(ip)
         self.wait_for_state(self._model_service, 'initialize', 'initialized')
         
-        self._model_service.build_model(model_path)
-        self.wait_for_state(self._model_service, 'build_model', 'ready')
+        # ensemble or individual model
+        if ensemble_model_paths:
+            self._model_service.build_ensemble(model, ensemble_model_paths)
+            self.wait_for_state(self._model_service, 'build_ensemble', 'ready')
+        else:
+            self._model_service.build_model(model_path)
+            self.wait_for_state(self._model_service, 'build_model', 'ready')
         
         if dataset_map:
             bindings = {}
@@ -115,8 +122,8 @@ class TestHarness(object):
             self._model_service.save_predictions(predictions_path)
             self.wait_for_state(self._model_service, 'save_predictions', 'ready')
             if predictions_validation_path:
-                if not validate_predictions_csv(predictions_validation_path):
-                    raise Exception("Failed to validate predictions csv file at %s" % predictions_validation_path)
+                if not validate_predictions(predictions_validation_path):
+                    raise Exception("Failed to validate predictions file at %s" % predictions_validation_path)
             
     def model_stream_predict(self, stream_input):
         """
@@ -128,6 +135,37 @@ class TestHarness(object):
         predictions = self._model_service.stream_predict(stream_input)
         print('Stream prediction results:')
         print(predictions)
+        
+    def model_stream_predict_source(self, stream_source, format=None, props=None, path=None):
+        """
+        Call stream_predict_source with supplied stream_source, format, and properties.
+        Output model predictions in a streaming manner.
+        
+        :param stream_source: The source for streaming predictions. This would typically be an URL. 
+        :param format: The format indicator of the input.
+        :param props: Dictionary of streaming properties to be used by the model.
+        """
+        print('Stream prediction results:')
+        
+        if path:
+            path = os.path.join(path, "predictions.json")
+        
+        try:
+            for prediction in self._model_service.stream_predict_source(stream_source, format=format, props=props, _preload_content=False):
+                pred = deserialize_model(json.loads(prediction.decode('utf8')), WatchEvent)
+                if path:
+                    with open(path, 'ab') as pred_file:
+                        pred_file.write(prediction)
+                print(pred)
+        except Exception as e:
+            print (e)
+    
+        print('Stream prediction complete')
+        
+    def model_stream_predict_source_cancel(self, model):
+        self._model_service = model_service_wrapper.ModelServiceWrapper(os.path.join(model, 'v1/mistk'))
+        self._model_service.cancel_stream_predict_with_source()
+        
 
     def model_update_stream_properties(self, stream_properties):
         """
@@ -150,6 +188,22 @@ class TestHarness(object):
         if generations_path:
             self._model_service.save_generations(generations_path)
             self.wait_for_state(self._model_service, 'save_generations', 'ready')
+            
+    def model_miniaturize(self, miniaturize_path=None, include_half_precision=False):
+        """
+        Call miniaturize on the model.
+        Output model status.
+        
+        :param miniaturize_path: The path to which the model's generations should be saved
+        :param include_half_precision: A boolean for half precision
+        """
+        
+        if miniaturize_path:
+            self._model_service.miniaturize(miniaturize_path, include_half_precision)
+            self.wait_for_state(self._model_service, 'miniaturize', 'ready')
+        else:
+            raise Exception("Miniaturization path required")
+    
         
     def wait_for_state(self, service, stage, state):
         """
@@ -249,10 +303,10 @@ class TestHarness(object):
         print('Evaluating...')
         
         # Validate the input ground truth and predictions csv file
-        if not validate_groundtruth_csv(gt_validation_path):
+        if not validate_groundtruth(gt_validation_path):
             msg = "Failed to validate ground truth csv file at %s" % gt_path
             raise Exception(msg)
-        if "predictions" == evaluation_input_format and not validate_predictions_csv(input_data_validation_path):
+        if "predictions" == evaluation_input_format and not validate_predictions(input_data_validation_path):
             msg = "Failed to validate predictions csv file at %s" % input_data_path
             raise Exception(msg)
         

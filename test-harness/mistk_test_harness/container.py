@@ -31,14 +31,43 @@ class Container(object):
         self._image = image
         self._client = docker.from_env()
         self._container = None
+        
+    def remove(self, name):
+        """
+        Forcefully removes the docker container based on its name
+        
+        :param name: The name of the container
+        
+        :return: True if stopped and removed, False if container not found
+        :rtype: bool
+        """
+        # container already running with specified name; stop it
+        try:
+            container = self._client.containers.get(name)
+            # container exists when it should not
+            container.remove(force=True)
+            return True
+        except docker.errors.NotFound:
+            # container does not exist
+            return False
+        
 
-    def run(self, volumes):
+    def run(self, volumes, port="8080", name=None):
         """
         Starts the docker container and mounts the volumes provided
         
         :param volumes: The data mount volumes that will be mounted in the container
+        :param port: The port to expose on host to map to container's port 8080
+        :param name: The name of the container
         """
-        self._container = self._client.containers.run(self._image, detach=True, volumes=volumes, user=os.getuid(), ports={'8080/tcp': 8080})
+        
+        # remove container after exiting 
+        rm = False
+        if name:
+            rm = True
+
+        self._container = self._client.containers.run(self._image, detach=True, volumes=volumes, user=os.getuid(), ports={f'{port}/tcp': port},
+                                                      name=name, auto_remove=rm)
         time.sleep(10)
         return self._container.name
 
@@ -60,3 +89,14 @@ class Container(object):
         with open(os.path.join(dirpath, filename), 'w') as writer:
             writer.write(output)
         return os.path.join(dirpath, filename)
+        
+    def add_network(self, network):
+        """
+        Add network to container
+        
+        :param network: Network to add
+        """
+        if self._container:
+            network.connect(self._container)
+            
+            

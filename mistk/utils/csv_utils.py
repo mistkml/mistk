@@ -39,7 +39,7 @@ def validate_predictions_csv(file_path):
         logger.error("No predictions file exists at %s" % file_path)
         return False
     
-    return _validate_csv(csv_file)
+    return validate_csv(csv_file)
 
 def validate_groundtruth_csv(file_path):
     """
@@ -59,9 +59,9 @@ def validate_groundtruth_csv(file_path):
         logger.error("No groundtruth file exists at %s" % file_path)
         return False
     
-    return _validate_csv(csv_file)
+    return validate_csv(csv_file)
 
-def _validate_csv(csv_file, output_file=None):
+def validate_csv(csv_file, output_file=None):
     """
     Validates a CSV file.
     
@@ -73,20 +73,24 @@ def _validate_csv(csv_file, output_file=None):
     """
     field_names = _get_header(csv_file)
     
-    validator = CSVValidator(field_names)
-    # basic header and record length checks
-    validator.add_header_check('EX1', 'bad header')
-    validator.add_record_length_check('EX2', 'unexpected record length')
-    
-    with open(csv_file) as fp:
-        data = csv.reader(fp)
-        problems = validator.validate(data)
-    
-        if problems:
-            write_problems(problems, output_file or sys.stdout)
-            return False
-        else:
-            return True
+    if field_names:
+        validator = CSVValidator(field_names)
+        # basic header and record length checks
+        validator.add_header_check('EX1', 'bad header')
+        validator.add_record_length_check('EX2', 'unexpected record length')
+        
+        with open(csv_file) as fp:
+            data = csv.reader(fp)
+            problems = validator.validate(data)
+        
+            if problems:
+                write_problems(problems, output_file or sys.stdout)
+                return False
+            else:
+                return True
+    else:
+        logger.warning("No header in csv")
+        return True
         
 def _get_header(csv_file):
     """

@@ -56,7 +56,11 @@ def watch(rid, resource_version = None, init_value = None, init_value_op = "modi
                 try:
                     event = queue.get(True, keepalive_time)
                     event_str = str(PresumptiveJSONEncoder().encode(event))
-                    if hasattr(event.payload, 'object_info') and event.payload.object_info.resource_version > ver:
+                    if event.payload is None and event.event_type == 'deleted':
+                        # deleted; therefore, ended
+                        pub.unsubscribe(queue.put, rid)
+                        break
+                    elif hasattr(event.payload, 'object_info') and event.payload.object_info.resource_version > ver:
                         logger.debug("[%s] yielding watch event %s", qid, event_str)
                         yield event_str + "\n"
                     elif hasattr(event.payload, 'resource_version') and event.payload.resource_version > ver:
@@ -88,6 +92,9 @@ def notify_watch(rid, item, operation='modified'):
     """
     logger.debug("Notification received to resource %s: %s", rid, str(item))
     pub.sendMessage(rid, item=WatchEvent(payload=item, event_type=operation))
+
+def cancel_watch(rid):
+    pub.sendMessage(rid, item=WatchEvent(payload=None, event_type='deleted'))
 
 def object_stream(objects):
     """

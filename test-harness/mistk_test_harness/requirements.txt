@@ -1,0 +1,6 @@
+pandas >= 0.20.3
+scikit-learn >= 0.19.1
+numpy >= 1.13.3
+docker == 5.0.3
+scipy >= 1.0.0
+dataclasses-json == 0.5.7

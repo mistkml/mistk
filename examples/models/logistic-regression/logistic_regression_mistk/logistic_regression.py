@@ -269,6 +269,15 @@ class ScikitLearnLogisticRegressionModel(AbstractModel):
         # Convert from [0, 255] -> [0.0, 1.0].
         image = np.multiply(image, 1.0 / 255.0) 
         return image
+    
+    def do_update_stream_properties(self, props: dict):
+        logger.debug('do_update_stream_properties called')
+        logger.debug(f'stream props: {props}')
+        self._stream_props = props   
+        
+    def do_stream_predict_source(self, source: str, format: str, props: dict):
+        msg = "this model doesn't support 'stream_predict_source'"
+        raise NotImplementedError(msg)
 
     def do_generate(self):
         """
@@ -294,4 +303,12 @@ class ScikitLearnLogisticRegressionModel(AbstractModel):
 
     def do_reset(self):
         pass
-
+    
+    def do_miniaturize(self, dataPath, includeHalfPrecision):
+        msg = "this model doesn't support 'miniaturize'"
+        raise NotImplementedError(msg)
+    
+    def do_build_ensemble(self, ensemble_path=None, model_paths: dict=None):
+        msg = "this model doesn't support 'build_ensemble'"
+        raise NotImplementedError(msg)
+    

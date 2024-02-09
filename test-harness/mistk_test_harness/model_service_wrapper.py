@@ -61,6 +61,15 @@ class ModelServiceWrapper(object):
             be loaded
         """
         self._mi_api.build_model(model_path=model_path)
+        
+    def build_ensemble(self, ensemble_path=None, model_paths: dict=None):
+        """
+        Executes the ensemble instance's build_ensemble method with the input provided
+        
+        :param model_path: The directory path to where the model's snapshot file can
+            be loaded
+        """
+        self._mi_api.build_ensemble(ensemble_path=ensemble_path, model_paths=model_paths)
 
     def train(self):
         """
@@ -75,6 +84,16 @@ class ModelServiceWrapper(object):
         :param model_path: The path to which the model checkpoint should be saved.
         """
         self._mi_api.save_model(model_path=model_path)
+        
+    
+    def miniaturize(self, data_path, include_half_precision):
+        """
+        Executes the model instance's miniaturize method
+        
+        :param data_path: The path to which the model miniaturized checkpoint should be saved.
+        :param include_half_precision: Attempt to reduce to half point precision format (FP16) when miniaturizing the model 
+        """
+        self._mi_api.miniaturize(data_path, include_half_precision)
 
     def pause(self):
         """
@@ -108,6 +127,27 @@ class ModelServiceWrapper(object):
             base64 encoded data
         """
         return self._mi_api.stream_predict(data_map=data_map)
+
+    def stream_predict_source(self, source, format=None, props={}, **kwargs):
+        """
+        Executes the model instance's stream_predict_with_source method
+        
+        :param source: The source for streaming predictions. This would typically be an URL. 
+        :param format: The format indicator of the input.
+        :param props: Dictionary of streaming properties to be used by the model.
+        """
+        
+        return self._mi_api.stream_predict_source(source, format=format, props=props, **kwargs)
+    
+    
+    def cancel_stream_predict_with_source(self):
+        """
+        Cancels the model instance's stream_predict_with_source already running by executing
+        the model services cancel_stream_predict_with_source method.
+        """
+        
+        return self._mi_api.cancel_stream_predict_source()
+    
     
     def update_stream_properties(self, props):
         """

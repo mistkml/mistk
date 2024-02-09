@@ -1,0 +1,4 @@
+setuptools >= 21.0.0
+pandas >= 0.20.3
+numpy >= 1.13.3
+Pillow == 7.0.0

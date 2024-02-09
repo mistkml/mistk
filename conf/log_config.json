@@ -50,7 +50,18 @@
         "backupCount": 10
       }
     },
-    "loggers": { },
+    "loggers": { 
+      "connexion": {
+        "level": "WARN",
+        "handlers": ["file_handler", "console"],
+        "propagate": "no"
+        },
+        "openapi_spec_validator": {
+        "level": "WARN",
+        "handlers": ["file_handler", "console"],
+        "propagate": "no"
+        }
+    },
     "root": {
       "handlers": ["console", "file_handler"],
       "level": "INFO"

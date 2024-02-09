@@ -1,7 +1,7 @@
 ---
 swagger: "2.0"
 info:
-  version: "1.0.0"
+  version: "1.4.0"
   title: "Model Integration Software ToolKit"
 basePath: "/v1/mistk"
 schemes:
@@ -23,16 +23,16 @@ paths:
         name: "initializationParameters"
         description: "Initialization parameters for the model including the objectives,\
           \ properties, and hparams. Objectives are a list of objectives for this\
-          \ model instance from the following options  {train, predict, stream_predict,\
-          \ generate, transfer_learning}. Properties are a dictionary of properties\
-          \ for this model instance.  Hparams are a dictionary of hyperparameters\
-          \ for this model instance.\n"
+          \ model instance from the following options ['training', 'prediction', 'streaming_prediction',\
+          \ 'transfer_learning', 'generation', 'miniaturization']. Properties are\
+          \ a dictionary of properties for this model instance. Hparams are a dictionary\
+          \ of hyperparameters for this model instance.\n"
         required: true
         schema:
           $ref: "#/definitions/ModelInstanceInitParams"
       responses:
-        200:
-          description: "Returns 200 if the task was successfully submitted."
+        204:
+          description: "Returns 204 if the task was successfully submitted."
         400:
           description: "Returns 400 if there is a task running when called."
           schema:
@@ -52,7 +52,7 @@ paths:
       parameters:
       - in: "body"
         name: "datasets"
-        description: "A dictionary mapping objectives to MistkDataset objects.  Dictionary\
+        description: "A dictionary mapping objectives to MistkDataset objects. Dictionary\
           \ keys must be one of the following {train, test, generate}\n"
         required: true
         schema:
@@ -76,9 +76,10 @@ paths:
                 kind: "MistkDataset"
               modality: "text"
               format: "raw"
+          additionalProperties: {}
       responses:
-        200:
-          description: "Returns 200 if the task was successfully submitted."
+        204:
+          description: "Returns 204 if the task was successfully submitted."
         400:
           description: "Returns 400 if there is a task running when called."
           schema:
@@ -99,12 +100,49 @@ paths:
       - name: "modelPath"
         in: "query"
         description: "The absolute path to the directory where the model's checkpoint/snapshot\
-          \ file can be found. \n"
+          \ file can be found.\n"
         required: false
         type: "string"
       responses:
-        200:
-          description: "Returns 200 if the task was successfully submitted."
+        204:
+          description: "Returns 204 if the task was successfully submitted."
+        400:
+          description: "Returns 400 if there is a task running when called."
+          schema:
+            $ref: "#/definitions/ServiceError"
+        500:
+          description: "General server runtime exception"
+          schema:
+            $ref: "#/definitions/ServiceError"
+      x-swagger-router-controller: "mistk.model.service"
+  /buildEnsemble:
+    post:
+      tags:
+      - "Model Instance Endpoint"
+      summary: "Build the ensemble"
+      description: "Instructs the container to construct the ensemble"
+      operationId: "build_ensemble"
+      parameters:
+      - name: "ensemblePath"
+        in: "query"
+        description: "The absolute path to the directory where the ensemble's checkpoint/snapshot\
+          \ file can be found.\n"
+        required: false
+        type: "string"
+      - in: "body"
+        name: "modelPaths"
+        description: "A dictionary mapping model names to their associated model directories.\
+          \ The dictionary key is the individual model name with the value being the\
+          \ absolute path to the directories where the individual models' checkpoint/snapshot\
+          \ files can be found.\n"
+        required: false
+        schema:
+          type: "object"
+          additionalProperties:
+            type: "string"
+      responses:
+        204:
+          description: "Returns 204 if the task was successfully submitted."
         400:
           description: "Returns 400 if there is a task running when called."
           schema:
@@ -123,8 +161,8 @@ paths:
       operationId: "train"
       parameters: []
       responses:
-        200:
-          description: "Returns 200 if the task was successfully submitted."
+        204:
+          description: "Returns 204 if the task was successfully submitted."
         400:
           description: "Returns 400 if there is a task running when called."
           schema:
@@ -149,8 +187,8 @@ paths:
         required: true
         type: "string"
       responses:
-        200:
-          description: "Returns 200 if the task was successfully submitted."
+        204:
+          description: "Returns 204 if the task was successfully submitted."
         400:
           description: "Returns 400 if there is a task running when called."
           schema:
@@ -169,8 +207,8 @@ paths:
       operationId: "predict"
       parameters: []
       responses:
-        200:
-          description: "Returns 200 if the task was successfully submitted."
+        204:
+          description: "Returns 204 if the task was successfully submitted."
         400:
           description: "Returns 400 if there is a task running when called."
           schema:
@@ -185,7 +223,7 @@ paths:
       tags:
       - "Model Instance Endpoint"
       summary: "Perform streaming predictions with the model"
-      description: "Perform predictions with the test dataset previously loaded"
+      description: "Perform predictions with the provided data"
       operationId: "stream_predict"
       parameters:
       - in: "body"
@@ -196,12 +234,109 @@ paths:
           type: "object"
           additionalProperties:
             type: "string"
+      - name: "details"
+        in: "query"
+        description: "Boolean flag to indicate whether prediction details (markdown)\
+          \ should be included in predictions dictionary.\n"
+        required: false
+        type: "boolean"
+        default: false
       responses:
         200:
           description: "Dictionary of IDs to predictions"
           schema:
             type: "object"
-            properties: {}
+            additionalProperties: {}
+        400:
+          description: "Returns 400 if there is a task running when called."
+          schema:
+            $ref: "#/definitions/ServiceError"
+        500:
+          description: "General server runtime exception"
+          schema:
+            $ref: "#/definitions/ServiceError"
+      x-swagger-router-controller: "mistk.model.service"
+  /updateStreamProperties:
+    post:
+      tags:
+      - "Model Instance Endpoint"
+      summary: "Updates streaming properties with the model"
+      description: "Update streaming properties"
+      operationId: "update_stream_properties"
+      parameters:
+      - in: "body"
+        name: "props"
+        description: "Dictionary of metadata properties to be used by the model"
+        required: true
+        schema:
+          type: "object"
+      responses:
+        204:
+          description: "Returns 204 if the task was successfully submitted."
+        400:
+          description: "Returns 400 if there is a task running when called."
+          schema:
+            $ref: "#/definitions/ServiceError"
+        500:
+          description: "General server runtime exception"
+          schema:
+            $ref: "#/definitions/ServiceError"
+      x-swagger-router-controller: "mistk.model.service"
+  /streamPredict/source:
+    post:
+      tags:
+      - "Model Instance Endpoint"
+      summary: "Perform streaming predictions using the provided source as data with\
+        \ the model"
+      description: "Perform predictions using the provided source as data"
+      operationId: "stream_predict_source"
+      parameters:
+      - name: "source"
+        in: "query"
+        description: "The source for streaming predictions. This would typically be\
+          \ an URL. \n"
+        required: true
+        type: "string"
+      - name: "format"
+        in: "query"
+        description: "The format indicator of the input.  Used by the model to  differentiate\
+          \ between multiple accepted formats. The argument is only optional if the\
+          \ model accepts a single prediction format.\n"
+        required: false
+        type: "string"
+      - in: "body"
+        name: "props"
+        description: "Dictionary of streaming properties to be used by the model"
+        required: false
+        schema:
+          type: "object"
+      responses:
+        200:
+          description: "Stream of events where the 'payload' is a dictionary of IDs\
+            \ to predictions"
+          schema:
+            $ref: "#/definitions/WatchEvent"
+        400:
+          description: "Returns 400 if there is a task running when called."
+          schema:
+            $ref: "#/definitions/ServiceError"
+        500:
+          description: "General server runtime exception"
+          schema:
+            $ref: "#/definitions/ServiceError"
+      x-swagger-router-controller: "mistk.model.service"
+  /streamPredict/source/cancel:
+    delete:
+      tags:
+      - "Model Instance Endpoint"
+      summary: "Cancels the streaming predictions currently running with the model"
+      description: "Cancels streaming predictions running. Depending on the model,\
+        \ it may take some time to stop.\n"
+      operationId: "cancel_stream_predict_source"
+      parameters: []
+      responses:
+        204:
+          description: "Returns 204 if the model received the cancellation request"
         400:
           description: "Returns 400 if there is a task running when called."
           schema:
@@ -227,8 +362,8 @@ paths:
         required: true
         type: "string"
       responses:
-        200:
-          description: "Returns 200 if the task was successfully submitted."
+        204:
+          description: "Returns 204 if the task was successfully submitted."
         400:
           description: "Returns 400 if there is a task running when called."
           schema:
@@ -247,8 +382,8 @@ paths:
       operationId: "generate"
       parameters: []
       responses:
-        200:
-          description: "Returns 200 if the task was successfully submitted."
+        204:
+          description: "Returns 204 if the task was successfully submitted."
         400:
           description: "Returns 400 if there is a task running when called."
           schema:
@@ -274,10 +409,43 @@ paths:
         required: true
         type: "string"
       responses:
-        200:
-          description: "Returns 200 if the task was successfully submitted."
+        204:
+          description: "Returns 204 if the task was successfully submitted."
         400:
           description: "Returns 400 if there is a task running when called."
+          schema:
+            $ref: "#/definitions/ServiceError"
+        500:
+          description: "General server runtime exception"
+          schema:
+            $ref: "#/definitions/ServiceError"
+      x-swagger-router-controller: "mistk.model.service"
+  /miniaturize:
+    post:
+      tags:
+      - "Model Instance Endpoint"
+      summary: "Miniaturize the model"
+      description: "Instructs the model instance to miniaturize."
+      operationId: "miniaturize"
+      parameters:
+      - name: "dataPath"
+        in: "query"
+        description: "A path pointing to the directory where the miniaturized model\
+          \ should be saved.\n"
+        required: true
+        type: "string"
+      - name: "includeHalfPrecision"
+        in: "query"
+        description: "Whether to attempt to reduce to half point precision format\
+          \ (FP16) when miniaturizing the model"
+        required: true
+        type: "boolean"
+        default: false
+      responses:
+        204:
+          description: "Returns 204 if the task was successfully submitted.\n"
+        400:
+          description: "Returns 400 if there is a task running when called.\n"
           schema:
             $ref: "#/definitions/ServiceError"
         500:
@@ -290,13 +458,13 @@ paths:
       tags:
       - "Model Instance Endpoint"
       summary: "Pause the model"
-      description: "Instructs the container to pause the current training or  prediction\
+      description: "Instructs the container to pause the current training or prediction\
         \ activity\n"
       operationId: "pause"
       parameters: []
       responses:
-        200:
-          description: "Returns 200 if the task was successfully submitted.\n"
+        204:
+          description: "Returns 204 if the task was successfully submitted.\n"
         400:
           description: "Returns 400 if there is a task running when called.\n"
           schema:
@@ -315,8 +483,8 @@ paths:
       operationId: "resume_training"
       parameters: []
       responses:
-        200:
-          description: "Returns 200 if the task was successfully submitted.\n"
+        204:
+          description: "Returns 204 if the task was successfully submitted.\n"
         400:
           description: "Returns 400 if there is a task running when called.\n"
           schema:
@@ -335,8 +503,8 @@ paths:
       operationId: "resume_predict"
       parameters: []
       responses:
-        200:
-          description: "Returns 200 if the task was successfully submitted.\n"
+        204:
+          description: "Returns 204 if the task was successfully submitted.\n"
         400:
           description: "Returns 400 if there is a task running when called.\n"
           schema:
@@ -383,8 +551,8 @@ paths:
       operationId: "terminate"
       parameters: []
       responses:
-        200:
-          description: "Returns 200 if the task was successfully submitted.\n"
+        204:
+          description: "Returns 204 if the task was successfully submitted.\n"
         400:
           description: "Returns 400 if there is a task running when called.\n"
           schema:
@@ -403,8 +571,8 @@ paths:
       operationId: "reset"
       parameters: []
       responses:
-        200:
-          description: "Returns 200 if the task was successfully submitted.\n"
+        204:
+          description: "Returns 204 if the task was successfully submitted.\n"
         400:
           description: "Returns 400 if there is a task running when called.\n"
           schema:
@@ -449,6 +617,9 @@ definitions:
       continueToken:
         type: "string"
     description: "A list of Metrics."
+  MistkDataRecordList:
+    allOf:
+    - $ref: "#/definitions/DataRecordList"
   MistkDataRecord:
     allOf:
     - $ref: "#/definitions/DataRecord"
@@ -469,6 +640,7 @@ definitions:
           - "streaming_prediction"
           - "transfer_learning"
           - "generation"
+          - "miniaturization"
       modelProperties:
         type: "object"
         example:
@@ -477,9 +649,9 @@ definitions:
           num_labels: 1000
         description: "A dictionary of settings or configuration values that are passed\
           \ from the ecosystem, but are not considered model hyperparameters. Model\
-          \  properties are typically defined by a specific implementation of an \
-          \ algorithm (ie. a PyTorch implementation of Densenet may have different\
-          \  properties than a Tensorflow implementation). \n"
+          \ properties are typically defined by a specific implementation of an algorithm\
+          \ (ie. a PyTorch implementation of Densenet may have different properties\
+          \ than a Tensorflow implementation).\n"
         properties: {}
       hyperparameters:
         type: "object"
@@ -489,7 +661,7 @@ definitions:
           weight_decay: 4.0E-4
         description: "A dictionary of hyperparameters that are used by the model.\
           \ Hyperparameters are typically defined by the algorithm that a model is\
-          \ based on. \n"
+          \ based on.\n"
         properties: {}
     example:
       hyperparameters:
@@ -514,6 +686,29 @@ definitions:
       message:
         type: "string"
     description: "An custom error class used by component services"
+  WatchEvent:
+    type: "object"
+    required:
+    - "eventType"
+    - "payload"
+    properties:
+      payload:
+        type: "object"
+        description: "The object/resource which was changed. If the type of the event\
+          \ was *added* or *modified*, then this field is the new state of the resource.\
+          \  If the field is *deleted* then the value is the state just before deletion.\n"
+        properties: {}
+      eventType:
+        type: "string"
+        enum:
+        - "added"
+        - "modified"
+        - "deleted"
+    description: "An event indicating that an object or resource was modified. The\
+      \ event type is one of [added, modified, deleted].\n"
+    example:
+      payload: "{}"
+      eventType: "added"
   ModelInstanceStatus:
     type: "object"
     required:
@@ -531,21 +726,27 @@ definitions:
         - "failed"
         - "loading_data"
         - "building_model"
+        - "building_ensemble"
         - "ready"
         - "pausing"
         - "paused"
+        - "unpausing"
         - "training"
+        - "updating_properties"
         - "predicting"
         - "generating"
+        - "miniaturizing"
         - "saving_model"
         - "saving_predictions"
         - "saving_generations"
+        - "resetting"
+        - "completed"
       payload:
         type: "object"
         description: "Additional arbitrary information relevant to the current state.\n"
         properties: {}
     description: "A model instance status object represents the state of a running\
-      \ model instance. \n"
+      \ model instance.\n"
     example:
       payload: "{}"
       state: "started"
@@ -558,6 +759,7 @@ definitions:
         resourceVersion: 0
         description: "description"
         project: "project"
+        sharable: true
         resources:
         - "resources"
         - "resources"
@@ -588,7 +790,7 @@ definitions:
       displayName:
         type: "string"
         description: "The name of this resoure, as presented via this UI.  This field\
-          \ can have spaces and upper and lower case alphanumeric  characters as well\
+          \ can have spaces and upper and lower case alphanumeric characters as well\
           \ as spaces.\n"
       description:
         type: "string"
@@ -605,8 +807,12 @@ definitions:
         description: "The project for this object (assuming the resource is project-scoped)\n"
       public:
         type: "boolean"
-        description: "Boolean flag indicating whether this resource will be  accessible\
-          \ to members outside of the project\n"
+        description: "Boolean flag indicating whether this resource will be accessible\
+          \ to members outside of the project.\n"
+      sharable:
+        type: "boolean"
+        description: "Boolean flag indicating whether this resource may be shared\
+          \ with third-party applications (i.e., the Marketplace).\n"
       labels:
         type: "object"
         description: "Key-value pairs of annotations associate with the object.\n"
@@ -619,7 +825,7 @@ definitions:
       resourceVersion:
         type: "integer"
         description: "This is the server-managed version for the object.  It is used\
-          \  to support monitoring of resources.  This should not be set by the client\
+          \ to support monitoring of resources.  This should not be set by the client\
           \ (and will likely be ignored if it is)\n"
       creationTime:
         type: "string"
@@ -643,6 +849,7 @@ definitions:
       resourceVersion: 0
       description: "description"
       project: "project"
+      sharable: true
       resources:
       - "resources"
       - "resources"
@@ -668,16 +875,10 @@ definitions:
           \ dataset's data resides.\n"
       modality:
         type: "string"
-        description: "The type of the data, one of image, audio, video, text.  This\
-          \ does not specify the format of the data.\n"
-        enum:
-        - "image"
-        - "audio"
-        - "video"
-        - "text"
-        - "prediction"
-        - "evaluation"
-        - "metrics"
+        description: "The type of the data supported by this implementation, one of\
+          \ image, audio, video, text, etc. This does not specify the format of the\
+          \ data. Available modalities can be found using the \"global/meta/dataModalities\"\
+          \ endpoint\n"
       format:
         type: "string"
         description: "A string representing the name of the format of the dataset.\
@@ -687,7 +888,7 @@ definitions:
         $ref: "#/definitions/DatasetStatistics"
       defaultGroundTruthSetReference:
         description: "A reference to the default ground truth set that is associated\
-          \ with this dataset\n    \n"
+          \ with this dataset\n"
         $ref: "#/definitions/ObjectReference"
     description: "Defines the location within the data lake where a dataset can be\
       \ found. It is linked to a DatasetClass\n"
@@ -762,6 +963,15 @@ definitions:
         description: "The types of assessments this metric can be used for.\n"
         items:
           type: "string"
+      properties:
+        type: "object"
+        example:
+          threshold: 0.3
+          iterations: 100
+        description: "The optional properties which set values for the ParameterSpecs\
+          \ associated with this metric's implementation that will be sent to the\
+          \ instantiated evaluation metric.\n"
+        properties: {}
       version:
         type: "string"
         description: "The version of this metric"
@@ -794,12 +1004,21 @@ definitions:
         type: "string"
         description: "The arg name for prediction bounds"
     description: "The data parameters provides a mapping for data into the arguments\
-      \ passed to the metric.  \n"
+      \ passed to the metric.\n"
+  DataRecordList:
+    type: "object"
+    properties:
+      items:
+        type: "array"
+        items:
+          $ref: "#/definitions/DataRecord"
+      continueToken:
+        type: "string"
+    description: "A list of DataRecords."
   DataRecord:
     type: "object"
     required:
     - "recordId"
-    - "referencedSetId"
     properties:
       recordId:
         type: "string"
@@ -812,34 +1031,14 @@ definitions:
         type: "string"
         format: "uuid"
         description: "The UUID of the Data Record Set this record is associated with.\
-          \ This  should be the ObjectId of a GroundTruthSet or PredictionSet\n"
+          \ This should be the ObjectId of a GroundTruthSet or PredictionSet\n"
       values:
         type: "array"
         description: "A list of labels, optionally this could be a list of dictionaries\
-          \ instead where  the dictionaries contain the ground truth label plus a\
-          \ bounding box, etc,  this could also include certainty assessments. \n"
+          \ instead where the dictionaries contain the ground truth label plus a bounding\
+          \ box, etc, this could also include certainty assessments.\n"
         items:
           type: "object"
           properties: {}
     description: "A record of values associated with a GroundTruthSet, PredictionSet,\
       \ or EvaluationSet\n"
-  WatchEvent:
-    type: "object"
-    required:
-    - "eventType"
-    - "payload"
-    properties:
-      payload:
-        type: "object"
-        description: "The object/resource which was changed. If the type of the event\
-          \ was *added* or *modified*, then this field is the new state of the resource.\
-          \  If the field is *deleted* then the value is the state just before deletion.\n"
-        properties: {}
-      eventType:
-        type: "string"
-        enum:
-        - "added"
-        - "modified"
-        - "deleted"
-    description: "An event indicating that an object or resource was modified. The\
-      \ event type is one of [added, modified, deleted].\n"

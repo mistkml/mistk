@@ -1,3 +1,6 @@
+include conf/*
 include mistk/model/server/**/*.yaml
 include mistk/transform/server/**/*.yaml
 include mistk/evaluation/server/**/*.yaml
+include mistk/agent/server/**/*.yaml
+include mistk/orchestrator/server/**/*.yaml

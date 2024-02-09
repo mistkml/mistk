@@ -1,0 +1,732 @@
+---
+swagger: "2.0"
+info:
+  version: "1.4.0"
+  title: "Model Integration Software ToolKit - Agent"
+basePath: "/v1/mistk/agent"
+schemes:
+- "http"
+consumes:
+- "application/json"
+produces:
+- "application/json"
+paths:
+  /initialize:
+    post:
+      tags:
+      - "Agent Instance Endpoint"
+      summary: "Initialize the model"
+      description: "Instructs the model instance to initialize."
+      operationId: "initialize_agent"
+      parameters:
+      - in: "body"
+        name: "initializationParameters"
+        description: "Initialization parameters for the agent including properties,\
+          \ and hparams. Properties are a dictionary of properties for this agent\
+          \ instance. Hparams are a dictionary of hyperparameters for this agent instance.\n"
+        required: true
+        schema:
+          $ref: "#/definitions/AgentInstanceInitParams"
+      responses:
+        200:
+          description: "Returns 200 if the task was successfully submitted."
+        400:
+          description: "Returns 400 if there is a task running when called."
+          schema:
+            $ref: "#/definitions/ServiceError"
+        500:
+          description: "General server runtime exception"
+          schema:
+            $ref: "#/definitions/ServiceError"
+      x-swagger-router-controller: "mistk.agent.service"
+  /buildModel:
+    post:
+      tags:
+      - "Agent Instance Endpoint"
+      summary: "Build the model"
+      description: "Instructs the container to construct the model"
+      operationId: "build_model"
+      parameters:
+      - name: "modelPath"
+        in: "query"
+        description: "A path pointing to the directory where the model can be loaded\
+          \ from.\n"
+        required: false
+        type: "string"
+      responses:
+        200:
+          description: "Returns 200 if the task was successfully submitted."
+        400:
+          description: "Returns 400 if there is a task running when called."
+          schema:
+            $ref: "#/definitions/ServiceError"
+        500:
+          description: "General server runtime exception"
+          schema:
+            $ref: "#/definitions/ServiceError"
+      x-swagger-router-controller: "mistk.agent.service"
+  /saveModel:
+    post:
+      tags:
+      - "Agent Instance Endpoint"
+      summary: "Save the model snapshot"
+      description: "Instructs the container to serialize the model to the specified\
+        \ path\n"
+      operationId: "save_model"
+      parameters:
+      - name: "modelPath"
+        in: "query"
+        description: "A path pointing to the directory where the model is to be saved.\n"
+        required: true
+        type: "string"
+      responses:
+        200:
+          description: "Returns 200 if the task was successfully submitted."
+        400:
+          description: "Returns 400 if there is a task running when called."
+          schema:
+            $ref: "#/definitions/ServiceError"
+        500:
+          description: "General server runtime exception"
+          schema:
+            $ref: "#/definitions/ServiceError"
+      x-swagger-router-controller: "mistk.agent.service"
+  /status:
+    get:
+      tags:
+      - "Agent Instance Endpoint"
+      summary: "Get the status of the model"
+      description: "Retrieves the current status of the model"
+      operationId: "get_status"
+      parameters:
+      - name: "watch"
+        in: "query"
+        description: "Watch for changes to the described resources and return them\
+          \ as a stream of add, update, and remove notifications. Specify resourceVersion.\n"
+        required: false
+        type: "boolean"
+        default: false
+      - name: "resourceVersion"
+        in: "query"
+        description: "When specified with a watch call, shows changes that occur after\
+          \ that particular version of a resource. Defaults to changes from the beginning\
+          \ of history.\n"
+        required: false
+        type: "integer"
+      responses:
+        200:
+          description: "Returns the status"
+          schema:
+            $ref: "#/definitions/AgentInstanceStatus"
+      x-swagger-router-controller: "mistk.agent.service"
+  /agentRegistered:
+    post:
+      tags:
+      - "Agent Instance Endpoint"
+      summary: "Agent registered"
+      description: "Agent has been registered to a orchestrator"
+      operationId: "agent_registered"
+      parameters:
+      - in: "body"
+        name: "agentCfg"
+        description: "A dictionary for the agent configuration from the orchestrator\n"
+        required: false
+        schema:
+          type: "object"
+      responses:
+        200:
+          description: "Returns 200 if the task was successfully submitted."
+        400:
+          description: "Returns 400 if there is a task running when called."
+          schema:
+            $ref: "#/definitions/ServiceError"
+        500:
+          description: "General server runtime exception"
+          schema:
+            $ref: "#/definitions/ServiceError"
+      x-swagger-router-controller: "mistk.agent.service"
+  /episodeStarted:
+    post:
+      tags:
+      - "Agent Instance Endpoint"
+      summary: "Episode started"
+      description: "Instructs the agent that the episode has started"
+      operationId: "episode_started"
+      parameters:
+      - in: "body"
+        name: "episodeCfg"
+        description: "A dict for the episode config from the orchestrator. One key\
+          \ must be `obs`.\n"
+        required: false
+        schema:
+          type: "object"
+      responses:
+        200:
+          description: "Returns 200 if the task was successfully submitted."
+        400:
+          description: "Returns 400 if there is a task running when called."
+          schema:
+            $ref: "#/definitions/ServiceError"
+        500:
+          description: "General server runtime exception"
+          schema:
+            $ref: "#/definitions/ServiceError"
+      x-swagger-router-controller: "mistk.agent.service"
+  /getAction:
+    post:
+      tags:
+      - "Agent Instance Endpoint"
+      summary: "Get action(s) from agent"
+      description: "Gives the agent the observations to perform some action(s)"
+      operationId: "get_action"
+      parameters:
+      - in: "body"
+        name: "obs"
+        description: "A dict for each agent's environmental observations it has observed\n"
+        required: true
+        schema:
+          type: "object"
+      responses:
+        200:
+          description: "Returns a list of actions the agent should take"
+          schema:
+            type: "object"
+        400:
+          description: "Returns 400 if there is a task running when called."
+          schema:
+            $ref: "#/definitions/ServiceError"
+        500:
+          description: "General server runtime exception"
+          schema:
+            $ref: "#/definitions/ServiceError"
+      x-swagger-router-controller: "mistk.agent.service"
+  /replayAction:
+    post:
+      tags:
+      - "Agent Instance Endpoint"
+      summary: "Replay an action from agent"
+      description: "Gives the agent the observations to replay an action for learning"
+      operationId: "replay_action"
+      parameters:
+      - in: "body"
+        name: "obs"
+        description: "A dictionary with the keys for prev_obs, rewards, actions, &\
+          \ new_obs\n"
+        required: true
+        schema:
+          type: "object"
+      responses:
+        200:
+          description: "Returns 200 if the task was successfully submitted.\n"
+        400:
+          description: "Returns 400 if there is a task running when called."
+          schema:
+            $ref: "#/definitions/ServiceError"
+        500:
+          description: "General server runtime exception"
+          schema:
+            $ref: "#/definitions/ServiceError"
+      x-swagger-router-controller: "mistk.agent.service"
+  /episodeStopped:
+    post:
+      tags:
+      - "Agent Instance Endpoint"
+      summary: "Episode stopped"
+      description: "Instructs the agent that the episode has stopped"
+      operationId: "episode_stopped"
+      parameters: []
+      responses:
+        200:
+          description: "Returns 200 if the task was successfully submitted.\n"
+        400:
+          description: "Returns 400 if there is a task running when called.\n"
+          schema:
+            $ref: "#/definitions/ServiceError"
+        500:
+          description: "General server runtime exception"
+          schema:
+            $ref: "#/definitions/ServiceError"
+      x-swagger-router-controller: "mistk.agent.service"
+  /shutdown:
+    post:
+      tags:
+      - "Agent Instance Endpoint"
+      summary: "Shut down the agent"
+      description: "Shuts down the agent"
+      operationId: "terminate"
+      parameters: []
+      responses:
+        200:
+          description: "Returns 200 if the task was successfully submitted.\n"
+        400:
+          description: "Returns 400 if there is a task running when called.\n"
+          schema:
+            $ref: "#/definitions/ServiceError"
+        500:
+          description: "General server runtime exception"
+          schema:
+            $ref: "#/definitions/ServiceError"
+      x-swagger-router-controller: "mistk.agent.service"
+  /reset:
+    post:
+      tags:
+      - "Agent Instance Endpoint"
+      summary: "Resets the model"
+      description: "Resets the model"
+      operationId: "reset"
+      parameters:
+      - name: "unloadModel"
+        in: "query"
+        description: "Unload (reset) the built model or keep the current built model\n"
+        required: true
+        type: "boolean"
+        default: true
+      responses:
+        200:
+          description: "Returns 200 if the task was successfully submitted.\n"
+        400:
+          description: "Returns 400 if there is a task running when called.\n"
+          schema:
+            $ref: "#/definitions/ServiceError"
+        500:
+          description: "General server runtime exception"
+      x-swagger-router-controller: "mistk.agent.service"
+  /apiVersion:
+    get:
+      tags:
+      - "Agent Instance Endpoint"
+      summary: "Returns the version of the MISTK API"
+      description: "Returns the version of the MISTK API"
+      operationId: "get_api_version"
+      parameters: []
+      responses:
+        200:
+          description: "The MISTK API Version.\n"
+          schema:
+            type: "string"
+        500:
+          description: "General server runtime exception"
+      x-swagger-router-controller: "mistk.agent.service"
+definitions:
+  MistkDataset:
+    allOf:
+    - $ref: "#/definitions/Dataset"
+    - type: "object"
+      properties:
+        dataPath:
+          type: "string"
+  MistkMetric:
+    allOf:
+    - $ref: "#/definitions/Metric"
+  MistkMetricList:
+    type: "object"
+    properties:
+      items:
+        type: "array"
+        items:
+          $ref: "#/definitions/MistkMetric"
+      continueToken:
+        type: "string"
+    description: "A list of Metrics."
+  MistkDataRecordList:
+    allOf:
+    - $ref: "#/definitions/DataRecordList"
+  MistkDataRecord:
+    allOf:
+    - $ref: "#/definitions/DataRecord"
+  MistkWatchEvent:
+    allOf:
+    - $ref: "#/definitions/WatchEvent"
+  AgentInstanceInitParams:
+    type: "object"
+    properties:
+      modelProperties:
+        type: "object"
+        example:
+          arch: "densenet"
+          model_load_file: "checkpoint.pth"
+          num_labels: 1000
+        description: "A dictionary of settings or configuration values that are passed\
+          \ from the ecosystem, but are not considered model hyperparameters. Model\
+          \ properties are typically defined by a specific implementation of an algorithm\
+          \ (ie. a PyTorch implementation of Densenet may have different properties\
+          \ than a Tensorflow implementation).\n"
+        properties: {}
+      hyperparameters:
+        type: "object"
+        example:
+          learning_rate: 0.001
+          momentum: 0.9
+          weight_decay: 4.0E-4
+        description: "A dictionary of hyperparameters that are used by the model.\
+          \ Hyperparameters are typically defined by the algorithm that a model is\
+          \ based on.\n"
+        properties: {}
+    example:
+      hyperparameters:
+        learning_rate: 0.001
+        momentum: 0.9
+        weight_decay: 4.0E-4
+      modelProperties:
+        arch: "densenet"
+        model_load_file: "checkpoint.pth"
+        num_labels: 1000
+  ServiceError:
+    type: "object"
+    required:
+    - "message"
+    properties:
+      code:
+        type: "integer"
+        format: "int32"
+      message:
+        type: "string"
+    description: "An custom error class used by component services"
+  AgentInstanceStatus:
+    type: "object"
+    required:
+    - "objectInfo"
+    properties:
+      objectInfo:
+        $ref: "#/definitions/ObjectInfo"
+      state:
+        type: "string"
+        description: "The current state of the agent instance"
+        enum:
+        - "started"
+        - "initializing"
+        - "initialized"
+        - "building_model"
+        - "saving_model_init"
+        - "saving_model_ready"
+        - "agent_registering"
+        - "ready"
+        - "episode_starting"
+        - "in_episode"
+        - "getting_action"
+        - "replaying_action"
+        - "episode_stopping"
+        - "resetting"
+        - "failed"
+        - "completed"
+      payload:
+        type: "object"
+        description: "Additional arbitrary information relevant to the current state.\n"
+        properties: {}
+    description: "An agent instance status object represents the state of a running\
+      \ agent instance.\n"
+    example:
+      payload: "{}"
+      state: "started"
+      objectInfo:
+        summary: "summary"
+        owner: "owner"
+        creationTime: "2000-01-23T04:56:07.000+00:00"
+        kind: "kind"
+        displayName: "displayName"
+        resourceVersion: 0
+        description: "description"
+        project: "project"
+        sharable: true
+        resources:
+        - "resources"
+        - "resources"
+        labels: "{}"
+        public: true
+        modificationTime: "2000-01-23T04:56:07.000+00:00"
+        name: "name"
+        id: "046b6c7f-0b8a-43b9-b35d-6489e6daee91"
+  ObjectInfo:
+    type: "object"
+    properties:
+      kind:
+        type: "string"
+        description: "This is the type of the resource (e.g., Model, Dataset). The\
+          \ field is primarily used when returning watch events, where the type of\
+          \ the field will be unknown.  When submitting resources, this field will\
+          \ often simply be inferred from the context of the submission.\n"
+      id:
+        type: "string"
+        format: "uuid"
+        description: "The unique identifier of the object.  This will be generated\
+          \ automatically.\n"
+      name:
+        type: "string"
+        description: "The unique name of the object. Names of SML resources should\
+          \ be up to maximum length of 253 characters and consist of lower case alphanumeric\
+          \ characters, -, and .\n"
+      displayName:
+        type: "string"
+        description: "The name of this resoure, as presented via this UI.  This field\
+          \ can have spaces and upper and lower case alphanumeric characters as well\
+          \ as spaces.\n"
+      description:
+        type: "string"
+        description: "A documentation description of the resource.  This string can\
+          \ be in Markdown form.\n"
+      summary:
+        type: "string"
+        description: "A short description of this object\n"
+      owner:
+        type: "string"
+        description: "The owner/creator of this object.\n"
+      project:
+        type: "string"
+        description: "The project for this object (assuming the resource is project-scoped)\n"
+      public:
+        type: "boolean"
+        description: "Boolean flag indicating whether this resource will be accessible\
+          \ to members outside of the project.\n"
+      sharable:
+        type: "boolean"
+        description: "Boolean flag indicating whether this resource may be shared\
+          \ with third-party applications (i.e., the Marketplace).\n"
+      labels:
+        type: "object"
+        description: "Key-value pairs of annotations associate with the object.\n"
+        properties: {}
+      resources:
+        type: "array"
+        description: "An array of resources/reference URIs\n"
+        items:
+          type: "string"
+      resourceVersion:
+        type: "integer"
+        description: "This is the server-managed version for the object.  It is used\
+          \ to support monitoring of resources.  This should not be set by the client\
+          \ (and will likely be ignored if it is)\n"
+      creationTime:
+        type: "string"
+        format: "date-time"
+        description: "The date time at which this object was initially created. This\
+          \ will be auto generated by the underlying database. Any user input for\
+          \ this field will be ignored. This will be in the isoformat of 'YYYY-MM-DDTHH:MM:SS.ffffff'\n"
+      modificationTime:
+        type: "string"
+        format: "date-time"
+        description: "The date time at which this object was last modified. This will\
+          \ be auto generated by the underlying database. Any user input for this\
+          \ field will be ignored. This will be in the isoformat of 'YYYY-MM-DDTHH:MM:SS.ffffff'\n"
+    description: "This is the set of fields common to all objects."
+    example:
+      summary: "summary"
+      owner: "owner"
+      creationTime: "2000-01-23T04:56:07.000+00:00"
+      kind: "kind"
+      displayName: "displayName"
+      resourceVersion: 0
+      description: "description"
+      project: "project"
+      sharable: true
+      resources:
+      - "resources"
+      - "resources"
+      labels: "{}"
+      public: true
+      modificationTime: "2000-01-23T04:56:07.000+00:00"
+      name: "name"
+      id: "046b6c7f-0b8a-43b9-b35d-6489e6daee91"
+  Dataset:
+    type: "object"
+    required:
+    - "objectInfo"
+    properties:
+      objectInfo:
+        $ref: "#/definitions/ObjectInfo"
+      datastashId:
+        type: "string"
+        description: "The id of the datastash associated with this dataset where all\
+          \ of its files will be stored.\n"
+      datastashSubDir:
+        type: "string"
+        description: "This field denotes the sub path within the datastash where this\
+          \ dataset's data resides.\n"
+      modality:
+        type: "string"
+        description: "The type of the data supported by this implementation, one of\
+          \ image, audio, video, text, etc. This does not specify the format of the\
+          \ data. Available modalities can be found using the \"global/meta/dataModalities\"\
+          \ endpoint\n"
+      format:
+        type: "string"
+        description: "A string representing the name of the format of the dataset.\
+          \ This should be sufficient to ensure that models and transforms\n are able\
+          \ to read and parse the data.\n"
+      statistics:
+        $ref: "#/definitions/DatasetStatistics"
+      defaultGroundTruthSetReference:
+        description: "A reference to the default ground truth set that is associated\
+          \ with this dataset\n"
+        $ref: "#/definitions/ObjectReference"
+    description: "Defines the location within the data lake where a dataset can be\
+      \ found. It is linked to a DatasetClass\n"
+    x-sml-resource: "Dataset"
+    x-smlclient-verbs:
+    - "create"
+    - "read"
+    - "update"
+    - "delete"
+    - "list"
+    - "export"
+    x-sml-scope: "project"
+  DatasetStatistics:
+    type: "object"
+    properties:
+      size:
+        type: "integer"
+        format: "int32"
+        description: "The size (in bytes) of the dataset"
+        default: 0
+  ObjectReference:
+    type: "object"
+    properties:
+      kind:
+        type: "string"
+        description: "The type of the object being referenced. This is often optional\
+          \ as it will be inferrred by the context.\n"
+      project:
+        type: "string"
+        description: "The project (namespace) of this object.\n"
+      id:
+        type: "string"
+        format: "uuid"
+        description: "The unique identifier of the object."
+      name:
+        type: "string"
+        description: "The unique name of the object."
+      instance:
+        type: "object"
+        description: "Optionally, the object reference can contain the complete object.\
+          \  This is useful for unit testing where you don't want to go out to the\
+          \ SRM to obtain the referenced object.\n"
+        properties: {}
+    description: "A reference to another declared object.  At least one of id or name\
+      \ fields must be specified.\n"
+  Metric:
+    type: "object"
+    required:
+    - "objectInfo"
+    properties:
+      objectInfo:
+        $ref: "#/definitions/ObjectInfo"
+      implementationReference:
+        $ref: "#/definitions/ObjectReference"
+      package:
+        type: "string"
+        description: "The name of the package containing the implementation of this\
+          \ metric.\n"
+      method:
+        type: "string"
+        description: "The name of the method to be called when applying the metric.\n"
+      defaultArgs:
+        type: "object"
+        description: "The default arguments passed to the method when the metric is\
+          \ called.  These can be overwritten when the metric is associated with an\
+          \ assessment.\n"
+        properties: {}
+      dataParameters:
+        $ref: "#/definitions/MetricDataParameters"
+      assessmentTypes:
+        type: "array"
+        description: "The types of assessments this metric can be used for.\n"
+        items:
+          type: "string"
+      properties:
+        type: "object"
+        example:
+          threshold: 0.3
+          iterations: 100
+        description: "The optional properties which set values for the ParameterSpecs\
+          \ associated with this metric's implementation that will be sent to the\
+          \ instantiated evaluation metric.\n"
+        properties: {}
+      version:
+        type: "string"
+        description: "The version of this metric"
+    description: "Evaluation criteria for measuring the performance of an algorithm’\
+      s implementation.\n"
+    x-sml-resource: "Metric"
+    x-smlclient-verbs:
+    - "create"
+    - "read"
+    - "update"
+    - "delete"
+    - "list"
+    x-sml-scope: "project"
+  MetricDataParameters:
+    type: "object"
+    properties:
+      predictionLabels:
+        type: "string"
+        description: "The arg name for prediction labels"
+      truthLabels:
+        type: "string"
+        description: "The arg name for ground truth labels"
+      predictionScores:
+        type: "string"
+        description: "The arg name for prediction scores"
+      truthBounds:
+        type: "string"
+        description: "The arg name for ground truth bounds"
+      predictionBounds:
+        type: "string"
+        description: "The arg name for prediction bounds"
+    description: "The data parameters provides a mapping for data into the arguments\
+      \ passed to the metric.\n"
+  DataRecordList:
+    type: "object"
+    properties:
+      items:
+        type: "array"
+        items:
+          $ref: "#/definitions/DataRecord"
+      continueToken:
+        type: "string"
+    description: "A list of DataRecords."
+  DataRecord:
+    type: "object"
+    required:
+    - "recordId"
+    properties:
+      recordId:
+        type: "string"
+        description: "The id of this record"
+      referenceSetProject:
+        type: "string"
+        format: "string"
+        description: "the project associated with the data record set\n"
+      referencedSetId:
+        type: "string"
+        format: "uuid"
+        description: "The UUID of the Data Record Set this record is associated with.\
+          \ This should be the ObjectId of a GroundTruthSet or PredictionSet\n"
+      values:
+        type: "array"
+        description: "A list of labels, optionally this could be a list of dictionaries\
+          \ instead where the dictionaries contain the ground truth label plus a bounding\
+          \ box, etc, this could also include certainty assessments.\n"
+        items:
+          type: "object"
+          properties: {}
+    description: "A record of values associated with a GroundTruthSet, PredictionSet,\
+      \ or EvaluationSet\n"
+  WatchEvent:
+    type: "object"
+    required:
+    - "eventType"
+    - "payload"
+    properties:
+      payload:
+        type: "object"
+        description: "The object/resource which was changed. If the type of the event\
+          \ was *added* or *modified*, then this field is the new state of the resource.\
+          \  If the field is *deleted* then the value is the state just before deletion.\n"
+        properties: {}
+      eventType:
+        type: "string"
+        enum:
+        - "added"
+        - "modified"
+        - "deleted"
+    description: "An event indicating that an object or resource was modified. The\
+      \ event type is one of [added, modified, deleted].\n"

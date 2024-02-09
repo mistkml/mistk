@@ -1,7 +1,7 @@
 ---
 swagger: "2.0"
 info:
-  version: "1.0.0"
+  version: "1.4.0"
   title: "Model Integration Software ToolKit - Data Transformation"
 basePath: "/v1/mistk/transform"
 schemes:
@@ -154,11 +154,10 @@ definitions:
         - "completed"
       payload:
         type: "object"
-        description: "Additional arbitrary information relevant to the current state.\
-          \        \n"
+        description: "Additional arbitrary information relevant to the current state.\n"
         properties: {}
     description: "A transform instance status object represents the state of a running\
-      \ transform instance. \n"
+      \ transform instance.\n"
     example:
       payload: "{}"
       state: "started"
@@ -171,6 +170,7 @@ definitions:
         resourceVersion: 0
         description: "description"
         project: "project"
+        sharable: true
         resources:
         - "resources"
         - "resources"
@@ -201,7 +201,7 @@ definitions:
       displayName:
         type: "string"
         description: "The name of this resoure, as presented via this UI.  This field\
-          \ can have spaces and upper and lower case alphanumeric  characters as well\
+          \ can have spaces and upper and lower case alphanumeric characters as well\
           \ as spaces.\n"
       description:
         type: "string"
@@ -218,8 +218,12 @@ definitions:
         description: "The project for this object (assuming the resource is project-scoped)\n"
       public:
         type: "boolean"
-        description: "Boolean flag indicating whether this resource will be  accessible\
-          \ to members outside of the project\n"
+        description: "Boolean flag indicating whether this resource will be accessible\
+          \ to members outside of the project.\n"
+      sharable:
+        type: "boolean"
+        description: "Boolean flag indicating whether this resource may be shared\
+          \ with third-party applications (i.e., the Marketplace).\n"
       labels:
         type: "object"
         description: "Key-value pairs of annotations associate with the object.\n"
@@ -232,7 +236,7 @@ definitions:
       resourceVersion:
         type: "integer"
         description: "This is the server-managed version for the object.  It is used\
-          \  to support monitoring of resources.  This should not be set by the client\
+          \ to support monitoring of resources.  This should not be set by the client\
           \ (and will likely be ignored if it is)\n"
       creationTime:
         type: "string"
@@ -256,6 +260,7 @@ definitions:
       resourceVersion: 0
       description: "description"
       project: "project"
+      sharable: true
       resources:
       - "resources"
       - "resources"
@@ -288,16 +293,10 @@ definitions:
           \ dataset's data resides.\n"
       modality:
         type: "string"
-        description: "The type of the data, one of image, audio, video, text.  This\
-          \ does not specify the format of the data.\n"
-        enum:
-        - "image"
-        - "audio"
-        - "video"
-        - "text"
-        - "prediction"
-        - "evaluation"
-        - "metrics"
+        description: "The type of the data supported by this implementation, one of\
+          \ image, audio, video, text, etc. This does not specify the format of the\
+          \ data. Available modalities can be found using the \"global/meta/dataModalities\"\
+          \ endpoint\n"
       format:
         type: "string"
         description: "A string representing the name of the format of the dataset.\
@@ -307,7 +306,7 @@ definitions:
         $ref: "#/definitions/DatasetStatistics"
       defaultGroundTruthSetReference:
         description: "A reference to the default ground truth set that is associated\
-          \ with this dataset\n    \n"
+          \ with this dataset\n"
         $ref: "#/definitions/ObjectReference"
     description: "Defines the location within the data lake where a dataset can be\
       \ found. It is linked to a DatasetClass\n"

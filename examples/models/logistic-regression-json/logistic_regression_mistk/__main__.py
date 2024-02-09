@@ -1,0 +1,1 @@
+import mistk.__main__

@@ -27,8 +27,8 @@ import sys
 
 # The model states
 _model_states = {'started', 'initializing', 'initialized', 'failed', 'loading_data',
-                 'building_model', 'ready', 'pausing', 'paused', 'unpausing', 'training', 'updating_properties',
-                 'predicting', 'generating', 'saving_model', 'saving_predictions', 'saving_generations',
+                 'building_model', 'building_ensemble', 'ready', 'pausing', 'paused', 'unpausing', 'training', 'updating_properties',
+                 'predicting', 'generating', 'miniaturizing', 'saving_model', 'saving_predictions', 'saving_generations',
                  'terminating', 'terminated', 'resetting'}
 
 class AbstractModel (metaclass=ABCMeta):
@@ -51,7 +51,8 @@ class AbstractModel (metaclass=ABCMeta):
         self._machine.add_transition(trigger='initialized', source=['initializing', 'loading_data'], dest='initialized')
         self._machine.add_transition(trigger='load_data', source=['initialized', 'ready'], dest='loading_data', after='_do_load_data')
         self._machine.add_transition(trigger='build_model', source='initialized', dest='building_model', after='_do_build_model')
-        self._machine.add_transition(trigger='ready', source=['loading_data', 'building_model', 'training', 'updating_properties', 'predicting', 'saving_model', 'saving_predictions', 'resetting'], dest='ready')
+        self._machine.add_transition(trigger='build_ensemble', source='initialized', dest='building_ensemble', after='_do_build_ensemble')
+        self._machine.add_transition(trigger='ready', source=['loading_data', 'building_model', 'building_ensemble', 'training', 'updating_properties', 'predicting', 'generating', 'miniaturizing', 'saving_model', 'saving_predictions', 'saving_generations', 'resetting'], dest='ready')
         self._machine.add_transition(trigger='train', source='ready', dest='training', after='_do_train')
         self._machine.add_transition(trigger='pause', source=['training', 'predicting'], dest='pausing', after='_do_pause')
         self._machine.add_transition(trigger='paused', source='pausing', dest='paused')
@@ -63,12 +64,14 @@ class AbstractModel (metaclass=ABCMeta):
         self._machine.add_transition(trigger='update_stream_properties', source='ready', dest='updating_properties', after='_do_update_stream_properties')
         self._machine.add_transition(trigger='save_predictions', source='ready', dest='saving_predictions', after='_do_save_predictions')
         self._machine.add_transition(trigger='generate', source='ready', dest='generating', after='_do_generate')
+        self._machine.add_transition(trigger='miniaturize', source='ready', dest='miniaturizing', after='_do_miniaturize')
         self._machine.add_transition(trigger='save_generations', source='ready', dest='saving_generations', after='_do_save_generations')
         self._machine.add_transition(trigger='terminate', source=list(_model_states-{'terminating', 'terminated', 'failed'}), dest='terminating', after='_do_terminate')
         self._machine.add_transition(trigger='terminated', source='terminating', dest='terminated')
         self._machine.add_transition(trigger='reset', source=list(_model_states-{'terminating', 'terminated'}), dest='resetting', after='_do_reset')        
         
         self._model_built = False
+        self._ensemble_built = False
         self._response = None
         
     def update_status(self, payload):
@@ -171,6 +174,33 @@ class AbstractModel (metaclass=ABCMeta):
         :param path: The path to the model file
         """
         pass
+    
+    def build_ensemble(self, ensemble_path=None, model_paths: dict=None):
+        """
+        Triggers the model to enter the building_ensemble state.  A subsequent call to
+        do_build_ensemble with the given parameters will be made as a result.
+
+        This method should not be implemented or overwritten by subclasses.  It will be 
+        created by the state machine.
+        
+        :param ensemble_path: The path to the ensemble model file
+        :param model_paths: The paths to the model files in a dictionary. The key is the model name with the value being the model path.
+        """
+        pass
+    
+    def miniaturize(self, dataPath, includeHalfPrecision):
+        """
+        Triggers the model to enter the miniaturize state.  A subsequent call to
+        do_miniaturize with the given parameters will be made as a result.
+
+        This method should not be implemented or overwritten by subclasses.  It will be
+        created by the state machine.
+
+        :param dataPath: miniaturized model with be saved
+        :param includeHalfPrecision: a flag to indicate whether to use half precision for the miniaturized model
+        """
+        pass
+
     
     def ready(self):
         """
@@ -408,7 +438,33 @@ class AbstractModel (metaclass=ABCMeta):
         """
         Instructs the service to build all necessary data structures given the architecture and selected hyperparameters.
         
-        :param path: The path to the model file
+        :param path: The directory path to the model file
+        """
+        pass
+
+    
+    def _do_build_ensemble(self, ensemble_path=None, model_paths: dict=None):
+        """
+        Instructs the service to build all necessary models used for the ensemble model.
+        :param ensemble_path: The directory path to the ensemble model file
+        :param model_paths: The directory paths to the model files in a dictionary. The key is the model name with the value being the model path.
+        """
+        try:
+            if model_paths=='None': model_paths=None
+            self.do_build_ensemble(ensemble_path, model_paths)
+            self._ensemble_built = True            
+            self._do_build_model(ensemble_path)
+        except Exception as ex: #pylint: disable=broad-except
+            logger.exception("Error running do_build_ensemble")
+            self.fail(str(ex))
+
+    #@abstractmethod
+    def do_build_ensemble(self, ensemble_path=None, model_paths: dict=None):
+        """
+        Instructs the service to build all necessary ensemble data structures given the architecture and selected hyperparameters.
+        
+        :param ensemble_path: The path to the ensemble model file
+        :param model_paths: The paths to the model files in a dictionary. The key is the model name with the value being the model path.
         """
         pass
 
@@ -528,7 +584,6 @@ class AbstractModel (metaclass=ABCMeta):
     def do_predict(self):
         """
         Executes/resumes the prediction activity
-        This operation is currently not supported. 
         """
         pass
     
@@ -625,7 +680,6 @@ class AbstractModel (metaclass=ABCMeta):
     def do_generate(self):
         """
         Executes/resumes the generate activity
-        This operation is currently not supported. 
         """
         pass
     
@@ -637,7 +691,7 @@ class AbstractModel (metaclass=ABCMeta):
             file system where the generations will be saved
         """
         try:
-            self.do_save_predictions(dataPath)
+            self.do_save_generations(dataPath)
             self.ready()
         except Exception as ex:  #pylint: disable=broad-except
             logger.exception("Error running do_save_generations")
@@ -689,5 +743,29 @@ class AbstractModel (metaclass=ABCMeta):
     def do_reset(self):
         """
         Resets the model into its initial state
+        """
+        pass
+
+    def _do_miniaturize(self, dataPath, includeHalfPrecision):
+        """
+        Executes/resumes the miniaturize activity
+        
+        :param dataPath: The path to which the miniaturized model should be saved. 
+        :param includeHalfPrecision: Miniaturize using half point precision format (FP16) for the model
+        """
+        try:
+            self.do_miniaturize(dataPath, includeHalfPrecision)
+            self.ready()
+        except Exception as ex: #pylint: disable=broad-except
+            logger.exception("Error running do_miniaturize")
+            self.fail(str(ex))
+
+    #@abstractmethod
+    def do_miniaturize(self, dataPath, includeHalfPrecision):
+        """
+        Executes/resumes the miniaturize activity
+        
+        :param dataPath: The path to which the miniaturized model should be saved. 
+        :param includeHalfPrecision: Miniaturize using half point precision format (FP16) for the model
         """
         pass

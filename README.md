@@ -11,7 +11,7 @@ These instructions will get you a copy of the project up and running on your loc
 It is expected to that the following software is installed on the system when building the MISTK toolkit:
 
 ```
-Python 3.6
+Python 3.6-3.9
 Pip
 Docker
 ```
@@ -31,4 +31,4 @@ Verify that mistk is now installed on PYTHON PATH by running::
 
     >>> import mistk
 
-See full [MISTK Documentation](https://mistkml.github.io/) for detailed installation instructions and to get started with the toolkit.
+See the full [MISTK Documentation](https://mistkml.github.io/) for detailed installation instructions and to get started with the toolkit. 

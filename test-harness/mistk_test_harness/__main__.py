@@ -41,7 +41,9 @@ parser = argparse.ArgumentParser(description='Test harness for validating model 
                                 'python -m mistk_test_harness --transform-output-path /tmp/ --transform-input-paths /my/input/folder/1 /my/input/folder/2 ... /my/input/folder/n\n' +
                                 '\t--transform-properties /my/properties/file --transform mytransform.MyTransformImplementation\n' +
                                 'python -m mistk_test_harness --transform-output-path /tmp/ --transform-input-paths /my/input/folder --transform http://localhost:8080\n'+
-                                'python -m mistk_test_harness --transform-output-path /tmp/ --transform-input-paths /my/input/folder --transform repo/mytransformimpl'
+                                'python -m mistk_test_harness --transform-output-path /tmp/ --transform-input-paths /my/input/folder --transform repo/mytransformimpl\n'+
+                                'python -m mistk_test_harness --predict /my/dataset/folder --model-path /my/ensemble-model/folder  --ensemble-model-paths=/my/ensemble-model/folder/models.json  --predictions-path /my/predictions/folder --model mymodel.MyImplementedModel'
+                                'python -m mistk_test_harness --miniaturize /my/new/miniaturized/folder --model-path /my/model/folder --model mymodel.MyImplementedModel'
                                 )
 parser.add_argument('--model', metavar='MODEL',
                     help='Model module/package, service endpoint URL, or Docker image')
@@ -53,6 +55,10 @@ parser.add_argument('--predict', metavar='PATH',
                     help='Run predictions over the dataset at the local path')
 parser.add_argument('--generate', action='store_true',
                     help='Run generations using the model')
+parser.add_argument('--miniaturize', metavar='PATH',
+                    help='Run miniaturize with local folder path to save miniaturized model checkpoint')
+parser.add_argument('--include-half-precision', action='store_true',
+                    help='Miniaturize using half point precision format (FP16) for the model, used with the --miniaturize option')
 parser.add_argument('--evaluation', metavar='EVALUATION',
                     help='Evaluation module/package, service endpoint URL, or Docker image')
 parser.add_argument('--evaluate', metavar='TYPE',
@@ -77,6 +83,8 @@ parser.add_argument('--model-props', metavar='FILE',
                     help='Local file containing json dictionary of model properties')
 parser.add_argument('--hyperparams', metavar='FILE',
                     help='Local file containing json dictionary of model hyperparameters')
+parser.add_argument('--ensemble-model-paths', metavar='FILE',
+                    help='Local file containing json dictionary of model names (key) and folder paths (value) to load model files (e.g. checkpoints), used with the --train or --predict options')
 parser.add_argument('--stream-predict', metavar='FILE',
                     help='Local file containing json dictionary of ids to base64 encoded input data')
 parser.add_argument('--stream-properties', metavar='FILE',
@@ -96,7 +104,7 @@ parser.add_argument('--evaluation-properties', metavar='FILE',
 parser.add_argument('--metrics', metavar='METRIC',
                     help='Comma delimited list of metric names for metrics to be evaluated')
 parser.add_argument('--port', metavar='PORT', default='8080',
-                    help='Web server port to use, defaults to 8080')
+                    help='Web server port to use when starting a Docker container, defaults to 8080')
 parser.add_argument('--disable-container-shutdown', action='store_true', 
                     help='Disables automatic shutdown of the model or transform docker container')
 parser.add_argument('--logs', action='store_true', help='Show all MISTK log output (info)')
@@ -120,6 +128,10 @@ if args.predict and not args.model:
 if args.generate and not args.model:
     print('--generate flag requires --model')
     sys.exit()
+    
+if args.miniaturize and not args.model:
+    print('--miniaturize flag requires --model')
+    sys.exit()
 
 if args.evaluate:
     if args.evaluate not in evaluation_types:
@@ -140,6 +152,13 @@ if args.hyperparams:
         hyperparams = json.load(file)
 else:
     hyperparams = None
+
+if args.ensemble_model_paths:
+    print(args.ensemble_model_paths)
+    with open(args.ensemble_model_paths) as file:
+        ensemble_models_properties = json.load(file)
+else:
+    ensemble_models_properties = None
     
 if args.stream_predict:
     with open(args.stream_predict) as file:
@@ -175,8 +194,15 @@ if args.model:
     model_predictions_path = os.path.abspath(args.predictions_path) if args.predictions_path else None
     model_predictions_validation_path = model_predictions_path
     model_generations_path = os.path.abspath(args.generations_path) if args.generations_path else None
+    model_mini_path = os.path.abspath(args.miniaturize) if args.miniaturize else None
     model_path = os.path.abspath(args.model_path) if args.model_path else None
     model_save_path = os.path.abspath(args.model_save_path) if args.model_save_path else None
+    
+    # Ensemble paths
+    if ensemble_models_properties:
+        for en_model_name, en_model_path in ensemble_models_properties.items():
+            ensemble_models_properties[en_model_name] = os.path.abspath(en_model_path) if en_model_path else None        
+    
     
     # Build the docker model_container for the model
     if not args.model.startswith('http:') and re.match('[\w:-]*/[\w:-]*', args.model) is not None:
@@ -191,23 +217,36 @@ if args.model:
         elif model_test_path:
             volumes[model_test_path] = {'bind': '/tmp/test', 'mode': 'ro'}
             model_test_path = '/tmp/test'
-    
         if model_predictions_path:
             volumes[model_predictions_path] = {'bind': '/tmp/predictions', 'mode': 'rw'}
             model_predictions_path = '/tmp/predictions'
         if model_generations_path:
             volumes[model_generations_path] = {'bind': '/tmp/generations', 'mode': 'rw'}
             model_generations_path = '/tmp/generations'
+        if model_mini_path:
+            volumes[model_mini_path] = {'bind': '/tmp/miniaturize', 'mode': 'rw'}
+            model_mini_path = '/tmp/miniaturize'
         if model_save_path:
             volumes[model_save_path] = {'bind': '/tmp/model', 'mode': 'rw'}
             model_save_path = '/tmp/model'
         if model_path:
+            if model_path in volumes:
+                print('--model-path : model path must be unique for volume mounting')
+                sys.exit()
             volumes[model_path] = {'bind': '/tmp/checkpoint', 'mode': 'ro'}
             model_path = '/tmp/checkpoint'
+        # ensemble models volume mapping   
+        if ensemble_models_properties:
+            for en_model_name, en_model_path in ensemble_models_properties.items():
+                if en_model_path in volumes:
+                    print('--ensemble-model-paths : each model path must be unique for volume mounting')
+                    sys.exit()
+                volumes[en_model_path] = {'bind': f'/tmp/{en_model_name}', 'mode': 'ro'}    
+                ensemble_models_properties[en_model_name] = f'/tmp/{en_model_name}'
                 
         print('Starting model_container ' + args.model)
         model_container = Container(args.model)
-        name = model_container.run(volumes)
+        name = model_container.run(volumes, args.port)
         model = f'http://localhost:{args.port}'
 
     if model_train_path:
@@ -222,6 +261,8 @@ if args.model:
         objectives.append('streaming_prediction')
     if args.generate:
         objectives.append('generation')
+    if args.miniaturize:
+        objectives.append('miniaturization')
         
 # Set up the test harness for transforms        
 transform_container = None
@@ -263,7 +304,7 @@ if args.transform:
         
         print('Starting transform_container ' + args.transform)
         transform_container = Container(args.transform)
-        name = transform_container.run(volumes)
+        name = transform_container.run(volumes, args.port)
         transform = f'http://localhost:{args.port}'
         
 # Evaluation
@@ -314,15 +355,19 @@ if args.evaluate:
         print('Starting evaluation_container ' + args.evaluation)
         print('Container volumes ' + str(volumes))
         evaluation_container = Container(args.evaluation)
-        name = evaluation_container.run(volumes)
+        name = evaluation_container.run(volumes, args.port)
         eval = f'http://localhost:{args.port}'
 
 harness = TestHarness()
     
 
 try:
-    if args.train or args.predict or args.stream_predict or args.generate:
-        harness.model_init(model, objectives, dataset_map, model_path, model_props, hyperparams)
+    if args.train or args.predict or args.stream_predict or args.generate or args.miniaturize:
+        
+        if ensemble_models_properties:
+            harness.model_init(model, objectives, dataset_map, model_path, model_props, hyperparams, ensemble_models_properties)
+        else:
+            harness.model_init(model, objectives, dataset_map, model_path, model_props, hyperparams)
     
         if args.train:
             harness.model_train(model_save_path)
@@ -338,6 +383,10 @@ try:
         
         if args.generate:
             harness.model_generate(model_generations_path)
+            
+        if args.miniaturize:
+            half_precision = args.include_half_precision if args.include_half_precision else False
+            harness.model_miniaturize(model_mini_path, half_precision)
     
     if args.evaluate: 
         print('Evaluating predictions')

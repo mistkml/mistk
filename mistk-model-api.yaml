@@ -1,7 +1,7 @@
 ---
 swagger: "2.0"
 info:
-  version: "1.0.0"
+  version: "1.1.0"
   title: "Model Integration Software ToolKit"
 basePath: "/v1/mistk"
 schemes:
@@ -23,10 +23,10 @@ paths:
         name: "initializationParameters"
         description: "Initialization parameters for the model including the objectives,\
           \ properties, and hparams. Objectives are a list of objectives for this\
-          \ model instance from the following options  {train, predict, stream_predict,\
-          \ generate, transfer_learning}. Properties are a dictionary of properties\
-          \ for this model instance.  Hparams are a dictionary of hyperparameters\
-          \ for this model instance.\n"
+          \ model instance from the following options  ['training', 'prediction',\
+          \ 'streaming_prediction', 'transfer_learning', 'generation', 'miniaturization'].\
+          \ Properties are a dictionary of properties for this model instance.  Hparams\
+          \ are a dictionary of hyperparameters for this model instance.\n"
         required: true
         schema:
           $ref: "#/definitions/ModelInstanceInitParams"
@@ -76,6 +76,7 @@ paths:
                 kind: "MistkDataset"
               modality: "text"
               format: "raw"
+          additionalProperties: {}
       responses:
         200:
           description: "Returns 200 if the task was successfully submitted."
@@ -102,6 +103,43 @@ paths:
           \ file can be found. \n"
         required: false
         type: "string"
+      responses:
+        200:
+          description: "Returns 200 if the task was successfully submitted."
+        400:
+          description: "Returns 400 if there is a task running when called."
+          schema:
+            $ref: "#/definitions/ServiceError"
+        500:
+          description: "General server runtime exception"
+          schema:
+            $ref: "#/definitions/ServiceError"
+      x-swagger-router-controller: "mistk.model.service"
+  /buildEnsemble:
+    post:
+      tags:
+      - "Model Instance Endpoint"
+      summary: "Build the ensemble"
+      description: "Instructs the container to construct the ensemble"
+      operationId: "build_ensemble"
+      parameters:
+      - name: "ensemblePath"
+        in: "query"
+        description: "The absolute path to the directory where the ensemble's checkpoint/snapshot\
+          \ file can be found. \n"
+        required: false
+        type: "string"
+      - in: "body"
+        name: "modelPaths"
+        description: "A dictionary mapping model names to their associated model directories.\
+          \ The dictionary  key is the individual model name with the value being\
+          \ the absolute path to the directories  where the individual models' checkpoint/snapshot\
+          \ files can be found. \n"
+        required: false
+        schema:
+          type: "object"
+          additionalProperties:
+            type: "string"
       responses:
         200:
           description: "Returns 200 if the task was successfully submitted."
@@ -196,12 +234,45 @@ paths:
           type: "object"
           additionalProperties:
             type: "string"
+      - name: "details"
+        in: "query"
+        description: "Boolean flag to indicate whether prediction details (markdown)\
+          \ should be included in predictions dictionary. \n"
+        required: false
+        type: "boolean"
+        default: false
       responses:
         200:
           description: "Dictionary of IDs to predictions"
           schema:
             type: "object"
-            properties: {}
+            additionalProperties: {}
+        400:
+          description: "Returns 400 if there is a task running when called."
+          schema:
+            $ref: "#/definitions/ServiceError"
+        500:
+          description: "General server runtime exception"
+          schema:
+            $ref: "#/definitions/ServiceError"
+      x-swagger-router-controller: "mistk.model.service"
+  /updateStreamProperties:
+    post:
+      tags:
+      - "Model Instance Endpoint"
+      summary: "Updates streaming properties with the model"
+      description: "Update streaming properties"
+      operationId: "update_stream_properties"
+      parameters:
+      - in: "body"
+        name: "props"
+        description: "Dictionary of metadata properties to be used by the model"
+        required: true
+        schema:
+          type: "object"
+      responses:
+        200:
+          description: "Returns 200 if the task was successfully submitted."
         400:
           description: "Returns 400 if there is a task running when called."
           schema:
@@ -278,6 +349,39 @@ paths:
           description: "Returns 200 if the task was successfully submitted."
         400:
           description: "Returns 400 if there is a task running when called."
+          schema:
+            $ref: "#/definitions/ServiceError"
+        500:
+          description: "General server runtime exception"
+          schema:
+            $ref: "#/definitions/ServiceError"
+      x-swagger-router-controller: "mistk.model.service"
+  /miniaturize:
+    post:
+      tags:
+      - "Model Instance Endpoint"
+      summary: "Miniaturize the model"
+      description: "Instructs the model instance to miniaturize."
+      operationId: "miniaturize"
+      parameters:
+      - name: "dataPath"
+        in: "query"
+        description: "A path pointing to the directory where the miniaturized model\
+          \ should be saved.\n"
+        required: true
+        type: "string"
+      - name: "includeHalfPrecision"
+        in: "query"
+        description: "Whether to attempt to reduce to half point precision format\
+          \ (FP16) when miniaturizing the model"
+        required: true
+        type: "boolean"
+        default: false
+      responses:
+        200:
+          description: "Returns 200 if the task was successfully submitted.\n"
+        400:
+          description: "Returns 400 if there is a task running when called.\n"
           schema:
             $ref: "#/definitions/ServiceError"
         500:
@@ -469,6 +573,7 @@ definitions:
           - "streaming_prediction"
           - "transfer_learning"
           - "generation"
+          - "miniaturization"
       modelProperties:
         type: "object"
         example:
@@ -558,6 +663,7 @@ definitions:
         resourceVersion: 0
         description: "description"
         project: "project"
+        sharable: true
         resources:
         - "resources"
         - "resources"
@@ -606,7 +712,11 @@ definitions:
       public:
         type: "boolean"
         description: "Boolean flag indicating whether this resource will be  accessible\
-          \ to members outside of the project\n"
+          \ to members outside of the project.\n"
+      sharable:
+        type: "boolean"
+        description: "Boolean flag indicating whether this resource may be shared\
+          \ with third-party applications (i.e., the Marketplace).\n"
       labels:
         type: "object"
         description: "Key-value pairs of annotations associate with the object.\n"
@@ -643,6 +753,7 @@ definitions:
       resourceVersion: 0
       description: "description"
       project: "project"
+      sharable: true
       resources:
       - "resources"
       - "resources"
@@ -668,16 +779,10 @@ definitions:
           \ dataset's data resides.\n"
       modality:
         type: "string"
-        description: "The type of the data, one of image, audio, video, text.  This\
-          \ does not specify the format of the data.\n"
-        enum:
-        - "image"
-        - "audio"
-        - "video"
-        - "text"
-        - "prediction"
-        - "evaluation"
-        - "metrics"
+        description: "The type of the data supported by this implementation, one of\
+          \ image, audio, video, text, etc. This does not specify the format of the\
+          \ data. Available modalities can be found using the \"global/meta/dataModalities\"\
+          \ endpoint\n"
       format:
         type: "string"
         description: "A string representing the name of the format of the dataset.\

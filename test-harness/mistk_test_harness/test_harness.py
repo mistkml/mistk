@@ -41,7 +41,7 @@ class TestHarness(object):
         self._evaluation_service = None
         self._status_version = 0
 
-    def model_init(self, model, objectives, dataset_map, model_path=None, model_props=None, hyperparams=None):
+    def model_init(self, model, objectives, dataset_map, model_path=None, model_props=None, hyperparams=None, ensemble_model_paths=None):
         """
         Instantiate model or remote endpoint wrapper.
         Call initialize, load_data, build_model on model.
@@ -69,8 +69,13 @@ class TestHarness(object):
         self._model_service.initialize_model(ip)
         self.wait_for_state(self._model_service, 'initialize', 'initialized')
         
-        self._model_service.build_model(model_path)
-        self.wait_for_state(self._model_service, 'build_model', 'ready')
+        # ensemble or individual model
+        if ensemble_model_paths:
+            self._model_service.build_ensemble(model, ensemble_model_paths)
+            self.wait_for_state(self._model_service, 'build_ensemble', 'ready')
+        else:
+            self._model_service.build_model(model_path)
+            self.wait_for_state(self._model_service, 'build_model', 'ready')
         
         if dataset_map:
             bindings = {}
@@ -150,6 +155,22 @@ class TestHarness(object):
         if generations_path:
             self._model_service.save_generations(generations_path)
             self.wait_for_state(self._model_service, 'save_generations', 'ready')
+            
+    def model_miniaturize(self, miniaturize_path=None, include_half_precision=False):
+        """
+        Call miniaturize on the model.
+        Output model status.
+        
+        :param miniaturize_path: The path to which the model's generations should be saved
+        :param include_half_precision: A boolean for half precision
+        """
+        
+        if miniaturize_path:
+            self._model_service.miniaturize(miniaturize_path, include_half_precision)
+            self.wait_for_state(self._model_service, 'miniaturize', 'ready')
+        else:
+            raise Exception("Miniaturization path required")
+    
         
     def wait_for_state(self, service, stage, state):
         """

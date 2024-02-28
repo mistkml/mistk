@@ -180,7 +180,26 @@ class ModelInstanceEndpoint():
         except RuntimeError as inst:
             msg = "Error while building model: %s" % str(inst)
             logger.exception(msg)
-            return ServiceError(500, msg), 500    
+            return ServiceError(500, msg), 500
+        
+    def build_ensemble(self, ensemblePath=None, modelPaths=None):
+        """
+        Creates and returns a Task which builds the ensemble using the ensemble_path and model_paths provided
+        
+        :param ensemble_path: The path to the ensemble model file
+        :param model_paths: The paths to the model files in a dictionary. The key is the model name with the value being the model path.
+        :return: The created Task object
+        """
+        logger.debug("build ensemble called")
+        try:
+            task = ModelInstanceTask(operation="build_ensemble", 
+                                        parameters = {"ensemble_path": ensemblePath,
+                                                      "model_paths": modelPaths})
+            self.add_task(task)
+        except RuntimeError as inst:
+            msg = "Error while building model: %s" % str(inst)
+            logger.exception(msg)
+            return ServiceError(500, msg), 500        
         
     def load_data(self, datasets):
         """
@@ -335,7 +354,21 @@ class ModelInstanceEndpoint():
             msg = "Error while saving generations created by model on path specified: %s" % str(inst)
             logger.exception(msg)
             return ServiceError(500, msg), 500             
-        
+    
+    def miniaturize(self, dataPath, includeHalfPrecision):
+        """
+        Creates and returns a Task which kicks off a miniaturize activity
+        :return: The created Task object
+        """
+        logger.debug("Miniaturize called")
+        try:
+            task = ModelInstanceTask(
+                operation="miniaturize",
+                parameters={"dataPath": dataPath, "includeHalfPrecision": includeHalfPrecision})
+            self.add_task(task)
+        except RuntimeError as inst:
+            return ServiceError(500, str(inst)), 500
+ 
     def pause (self):
         """
         Pauses the model during its current operation
@@ -446,9 +479,9 @@ class ModelInstanceEndpoint():
             task.id = uuid.uuid4().hex
             task.status = 'queued'
             task.submitted = datetime.now()
-            ops = ['initialize', 'load_data', 'build_model', 'train', 'pause', 
+            ops = ['initialize', 'load_data', 'build_model', 'build_ensemble', 'train', 'pause', 
                    'unpause', 'save_model', 'predict', 'save_predictions', 'stream_predict',
-                   'update_stream_properties', 'generate', 'save_generations'] 
+                   'update_stream_properties', 'generate', 'save_generations', 'miniaturize'] 
              
             if not task.operation in ops:
                 msg = "Operation %s must be one of %s" % (str(task.operation), str(ops))
@@ -541,5 +574,5 @@ def initializeEndpointController(handler, *modules):
         
         fn2 = getattr(handler, name)
         sig2 = inspect.signature(fn2)
-        assert sig1 == sig2, "Can't redirect " + name +" : " + str(sig1) + "-" + str(sig2)
+        assert sig1 == sig2, f"Can't redirect {name} : {sig1} - {sig2})"
         globals()[name] = getattr(handler, name)

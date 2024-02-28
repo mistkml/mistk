@@ -1,7 +1,7 @@
 ---
 swagger: "2.0"
 info:
-  version: "1.0.0"
+  version: "1.1.0"
   title: "Model Integration Software ToolKit - Data Transformation"
 basePath: "/v1/mistk/transform"
 schemes:
@@ -171,6 +171,7 @@ definitions:
         resourceVersion: 0
         description: "description"
         project: "project"
+        sharable: true
         resources:
         - "resources"
         - "resources"
@@ -219,7 +220,11 @@ definitions:
       public:
         type: "boolean"
         description: "Boolean flag indicating whether this resource will be  accessible\
-          \ to members outside of the project\n"
+          \ to members outside of the project.\n"
+      sharable:
+        type: "boolean"
+        description: "Boolean flag indicating whether this resource may be shared\
+          \ with third-party applications (i.e., the Marketplace).\n"
       labels:
         type: "object"
         description: "Key-value pairs of annotations associate with the object.\n"
@@ -256,6 +261,7 @@ definitions:
       resourceVersion: 0
       description: "description"
       project: "project"
+      sharable: true
       resources:
       - "resources"
       - "resources"
@@ -288,16 +294,10 @@ definitions:
           \ dataset's data resides.\n"
       modality:
         type: "string"
-        description: "The type of the data, one of image, audio, video, text.  This\
-          \ does not specify the format of the data.\n"
-        enum:
-        - "image"
-        - "audio"
-        - "video"
-        - "text"
-        - "prediction"
-        - "evaluation"
-        - "metrics"
+        description: "The type of the data supported by this implementation, one of\
+          \ image, audio, video, text, etc. This does not specify the format of the\
+          \ data. Available modalities can be found using the \"global/meta/dataModalities\"\
+          \ endpoint\n"
       format:
         type: "string"
         description: "A string representing the name of the format of the dataset.\

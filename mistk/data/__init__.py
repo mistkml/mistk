@@ -20,4 +20,6 @@ Wrapper python package for obtaining all MISTK Data Model classes.
 """
 from mistk.model.server.models import *  #pylint: disable=wildcard-import
 from mistk.transform.server.models import TransformInstanceStatus, TransformSpecificationInitParams
-from mistk.evaluation.server.models import *
+from mistk.evaluation.server.models import EvaluationInstanceStatus, EvaluationSpecificationInitParams
+from mistk.agent.server.models import AgentInstanceStatus
+from mistk.orchestrator.server.models import OrchestratorInstanceStatus

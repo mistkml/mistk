@@ -15,6 +15,7 @@
 #
 ##############################################################################
 
+import os
 import setuptools
 
 REQUIRES=[
@@ -26,11 +27,15 @@ REQUIRES=[
     'mistk'
 ]
 
+if os.getenv("DIST_VERSION_OVERRIDE", False):
+    version_args = {"version": os.getenv("DIST_VERSION_OVERRIDE")}
+else:
+    version_args = {'use_scm_version': {"root": "../..", "relative_to": __file__}, 
+                    'setup_requires': ['setuptools_scm']}
 
 setuptools.setup(
     name='mistk-test-harness',
     packages=setuptools.find_packages(),
     package_data={'mistk_test_harness': ['*.json']},
     install_requires=REQUIRES,
-    use_scm_version = {"root": "../..", "relative_to": __file__},
-    setup_requires=['setuptools_scm'])
+    **version_args)

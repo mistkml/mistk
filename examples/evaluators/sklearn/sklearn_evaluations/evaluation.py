@@ -24,7 +24,7 @@ import time
 from sklearn.preprocessing import MultiLabelBinarizer
 
 from mistk.evaluation.abstract_evaluation_plugin import AbstractEvaluationPlugin
-from mistk.evaluation.util.convert import csv_Predictions_to_DataFrame, csv_Groundtruth_to_DataFrame
+from mistk.evaluation.util.convert import csv_predictions_to_dataframe, csv_groundtruth_to_dataframe
 from mistk import logger
 
 class SklearnEvaluation (AbstractEvaluationPlugin):
@@ -54,11 +54,11 @@ class SklearnEvaluation (AbstractEvaluationPlugin):
  
         # load prediction results
         full_predictions_path = os.path.join(input_data_path, "predictions.csv")
-        results_df = csv_Predictions_to_DataFrame(full_predictions_path)
+        results_df = csv_predictions_to_dataframe(full_predictions_path)
         
         # load ground truth
         full_ground_truth_path = os.path.join(ground_truth_path, "ground_truth.csv")
-        truth_df = csv_Groundtruth_to_DataFrame(full_ground_truth_path)
+        truth_df = csv_groundtruth_to_dataframe(full_ground_truth_path)
         
         # match ground truth to results by id 
         truth_df = truth_df.loc[truth_df['rowid'].isin(results_df['rowid'])]

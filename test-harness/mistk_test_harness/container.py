@@ -32,13 +32,14 @@ class Container(object):
         self._client = docker.from_env()
         self._container = None
 
-    def run(self, volumes):
+    def run(self, volumes, port="8080"):
         """
         Starts the docker container and mounts the volumes provided
         
         :param volumes: The data mount volumes that will be mounted in the container
+        :param port: The port to expose on host to map to container's port 8080
         """
-        self._container = self._client.containers.run(self._image, detach=True, volumes=volumes, user=os.getuid(), ports={'8080/tcp': 8080})
+        self._container = self._client.containers.run(self._image, detach=True, volumes=volumes, user=os.getuid(), ports={'8080/tcp': port})
         time.sleep(10)
         return self._container.name
 

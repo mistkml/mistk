@@ -15,12 +15,16 @@
 #
 ##############################################################################
 
+import os
 import setuptools
 
 
 REQUIRES=[
-    'Werkzeug == 0.16.1',
-    'connexion == 1.1.15',
+    'Werkzeug == 2.0.3',
+    'pyrsistent < 0.17.0',
+    'swagger-ui-bundle>=0.0.2,<0.1',
+    'openapi-spec-validator >= 0.2.4, < 0.4.0',
+    'connexion == 2.7.0',
     'certifi >= 2019.6.16',
     'python-dateutil >= 2.6.1',
     'setuptools >= 21.0.0',
@@ -28,15 +32,22 @@ REQUIRES=[
     'pypubsub == 4.0.0',
     'rwlock == 0.0.7',
     'wsgiserver == 1.3',
-    'autologging >= 1.2.1',    
+    'autologging >= 1.2.1',
     'PyYAML >= 5.1.0',
-    'urllib3 >= 1.25.3',
+    'urllib3 >= 1.25.3, < 1.26.0',
     'six >= 1.12.0',
-    'gevent == 1.4.0',
+    'gevent == 20.9.0',
     'bottle == 0.12.16',
-    'flask == 1.0.2',
+    'flask == 2.0.3',
+    'jinja2 >= 3.0.0',
     'csvvalidator >= 1.2'
 ]
+
+if os.getenv("DIST_VERSION_OVERRIDE", False):
+    version_args = {"version": os.getenv("DIST_VERSION_OVERRIDE")}
+else:
+    version_args = {'use_scm_version': {"root": "..", "relative_to": __file__},
+                    'setup_requires': ['setuptools_scm']}
 
 setuptools.setup(
     name='mistk',
@@ -44,5 +55,4 @@ setuptools.setup(
     package_data={'conf': ['*.ini']},
     include_package_data=True,
     install_requires=REQUIRES,
-    use_scm_version = {"root": "..", "relative_to": __file__},
-    setup_requires=['setuptools_scm'])
+    **version_args)
